@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/incognitochain/incognito-chain/blockchain/chain"
 	"time"
 
 	"github.com/incognitochain/incognito-chain/common"
@@ -307,7 +308,7 @@ func (blockCI *blockConsensusInstance) createAndSendVote() error {
 	return nil
 }
 
-func validateProposeBlock(block common.BlockInterface, view consensus.ChainViewInterface) (BFTVote, error) {
+func validateProposeBlock(block common.BlockInterface, view chain.ChainViewInterface) (BFTVote, error) {
 	err := view.ValidateBlock(block, true)
 	if err != nil {
 		return BFTVote{}, err
@@ -317,7 +318,7 @@ func validateProposeBlock(block common.BlockInterface, view consensus.ChainViewI
 	return v, nil
 }
 
-func (blockCI *blockConsensusInstance) initInstance(view consensus.ChainViewInterface) error {
+func (blockCI *blockConsensusInstance) initInstance(view chain.ChainViewInterface) error {
 	return nil
 }
 
@@ -370,7 +371,7 @@ func (blockCI *blockConsensusInstance) addBlock(block common.BlockInterface) err
 	return nil
 }
 
-func (e *BLSBFT) createBlockConsensusInstance(view consensus.ChainViewInterface, blockHash string) (*blockConsensusInstance, error) {
+func (e *BLSBFT) createBlockConsensusInstance(view chain.ChainViewInterface, blockHash string) (*blockConsensusInstance, error) {
 	e.lockOnGoingBlocks.Lock()
 	defer e.lockOnGoingBlocks.Unlock()
 	var blockCI blockConsensusInstance

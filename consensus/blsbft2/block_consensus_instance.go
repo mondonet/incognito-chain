@@ -1,6 +1,7 @@
 package blsbftv2
 
 import (
+	"github.com/incognitochain/incognito-chain/blockchain/chain"
 	"github.com/incognitochain/incognito-chain/consensus"
 	"sync"
 
@@ -9,7 +10,7 @@ import (
 
 type blockConsensusInstance struct {
 	Engine         *BLSBFT
-	View           consensus.ChainViewInterface
+	View           chain.ChainViewInterface
 	ConsensusCfg   consensusConfig
 	Block          common.BlockInterface
 	ValidationData ValidationData

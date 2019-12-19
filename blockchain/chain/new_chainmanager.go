@@ -23,7 +23,7 @@ type ChainManager struct {
 	lock    *sync.RWMutex
 }
 
-func (s *ChainManager) AddView(view common.ChainViewInterface) error {
+func (s *ChainManager) AddView(view ChainViewInterface) error {
 	panic("implement me")
 }
 
@@ -46,7 +46,7 @@ func (s *ChainManager) GetChainData() (res []byte) {
 }
 
 //create new chain with root manager
-func InitNewChain(name string, rootView common.ChainViewInterface) *ChainManager {
+func InitNewChain(name string, rootView ChainViewInterface) *ChainManager {
 	cm := &ChainManager{
 		name: name,
 		lock: new(sync.RWMutex),
@@ -64,7 +64,7 @@ func LoadChain(data []byte) (res *ChainManager) {
 	return res
 }
 
-func (s *ChainManager) AddChainView(view common.ChainViewInterface) {
+func (s *ChainManager) AddChainView(view ChainViewInterface) {
 	s.manager.AddView(view)
 }
 
@@ -132,19 +132,19 @@ func (s *ChainManager) GetShardID() int {
 	panic("implement me")
 }
 
-func (s ChainManager) GetBestView() common.ChainViewInterface {
+func (s ChainManager) GetBestView() ChainViewInterface {
 	return s.manager.GetBestView()
 }
 
-func (s ChainManager) GetFinalView() common.ChainViewInterface {
+func (s ChainManager) GetFinalView() ChainViewInterface {
 	return s.manager.GetFinalView()
 }
 
-func (ChainManager) GetAllViews() map[string]common.ChainViewInterface {
+func (ChainManager) GetAllViews() map[string]ChainViewInterface {
 	panic("implement me")
 }
 
-func (s *ChainManager) GetViewByHash(h *common.Hash) (common.ChainViewInterface, error) {
+func (s *ChainManager) GetViewByHash(h *common.Hash) (ChainViewInterface, error) {
 	viewnode, ok := s.manager.node[*h]
 	if !ok {
 		return nil, errors.New("view not exist")

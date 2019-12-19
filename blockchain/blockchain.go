@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"github.com/incognitochain/incognito-chain/consensus"
+	"github.com/incognitochain/incognito-chain/blockchain/chain"
 	"io"
 	"sort"
 	"strconv"
@@ -29,7 +29,7 @@ import (
 )
 
 type BlockChain struct {
-	Chains map[string]consensus.ChainManagerInterface
+	Chains map[string]chain.ChainManagerInterface
 	// FinalView *FinalView
 	config    Config
 	chainLock sync.Mutex
