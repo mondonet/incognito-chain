@@ -91,7 +91,6 @@ func init() {
 			//	waitingCandidateNextNumber = append(waitingCandidateNextNumber, v.GetMiningKeyBase58("bls"))
 			//}
 			//l.Add("waitingShardCandidateNextNumber", waitingCandidateNextNumber)
-			//
 			//pendingShardValidator := map[byte][]string{}
 			//shardValidator := map[byte][]string{}
 

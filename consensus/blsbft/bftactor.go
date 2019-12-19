@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/incognitochain/incognito-chain/metrics"
+
 	"github.com/incognitochain/incognito-chain/blockchain"
 	"github.com/incognitochain/incognito-chain/common"
 	"github.com/incognitochain/incognito-chain/common/base58"
@@ -166,7 +168,8 @@ func (e *BLSBFT) Start() error {
 									msg.(*wire.MessageBFT).ChainKey = e.ChainKey
 									msg.(*wire.MessageBFT).Content = voteCtnBytes
 									msg.(*wire.MessageBFT).Type = MSG_VOTE
-									e.Node.PushMessageToChain(msg, e.Chain)
+									// TODO uncomment here when switch to non-highway mode
+									// e.Node.PushMessageToChain(msg, e.Chain)
 								}()
 								e.addVote(voteMsg)
 							}(msg, e.RoundData.BlockHash, append([]incognitokey.CommitteePublicKey{}, e.RoundData.Committee...))
@@ -218,9 +221,9 @@ func (e *BLSBFT) Start() error {
 						}
 
 						if e.RoundData.Block == nil {
-							blockData, _ := json.Marshal(e.Blocks[roundKey])
-							msg, _ := MakeBFTProposeMsg(blockData, e.ChainKey, e.UserKeySet)
-							go e.Node.PushMessageToChain(msg, e.Chain)
+							// blockData, _ := json.Marshal(e.Blocks[roundKey])
+							// msg, _ := MakeBFTProposeMsg(blockData, e.ChainKey, e.UserKeySet)
+							// go e.Node.PushMessageToChain(msg, e.Chain)
 
 							e.RoundData.Block = e.Blocks[roundKey]
 							e.RoundData.BlockHash = *e.RoundData.Block.Hash()
@@ -282,7 +285,7 @@ func (e *BLSBFT) Start() error {
 						}
 						// metrics.SetGlobalParam("CommitTime", time.Since(time.Unix(e.Chain.GetTimeStamp(), 0)).Seconds())
 						// e.Node.PushMessageToAll()
-						e.logger.Infof("Commit block %+v hash=%+v \n Wait for next round", e.RoundData.Block.GetHeight(), e.RoundData.Block.Hash().String())
+						e.logger.Infof("Commit block (%d votes) %+v hash=%+v \n Wait for next round", len(e.RoundData.Votes), e.RoundData.Block.GetHeight(), e.RoundData.Block.Hash().String())
 						e.enterNewRound()
 					}
 				}
@@ -297,14 +300,18 @@ func (e *BLSBFT) enterProposePhase() {
 		return
 	}
 	e.setState(proposePhase)
-
+	e.isOngoing = true
 	block, err := e.createNewBlock()
 	// metrics.SetGlobalParam("CreateTime", time.Since(e.RoundData.TimeStart).Seconds())
 	if err != nil {
+		e.isOngoing = false
 		e.logger.Error("can't create block", err)
 		return
 	}
 
+	if e.Chain.CurrentHeight()+1 != block.GetHeight() {
+		return
+	}
 	validationData := e.CreateValidationData(block)
 	validationDataString, _ := EncodeValidationData(validationData)
 	block.(blockValidation).AddValidationField(validationDataString)
@@ -391,34 +398,36 @@ func (e *BLSBFT) addEarlyVote(voteMsg BFTVote) {
 func (e *BLSBFT) createNewBlock() (common.BlockInterface, error) {
 
 	var errCh chan error
-	var timeoutCh chan struct{}
-	var block common.BlockInterface
+	var block common.BlockInterface = nil
 	errCh = make(chan error)
-	timeoutCh = make(chan struct{})
-	timeout := time.AfterFunc(e.Chain.GetMaxBlkCreateTime(), func() {
-		select {
-		case <-timeoutCh:
-			return
-		default:
-			timeoutCh <- struct{}{}
-		}
-	})
+	timeout := time.NewTimer(e.Chain.GetMaxBlkCreateTime()).C
 
 	go func() {
 		time1 := time.Now()
 		var err error
 		block, err = e.Chain.GetFinalView().CreateNewBlock(uint64(e.RoundData.Round))
-		e.logger.Info("create block", time.Since(time1).Seconds())
+		if block != nil {
+			e.logger.Info("create block", block.GetHeight(), time.Since(time1).Seconds())
+		} else {
+			e.logger.Info("create block", time.Since(time1).Seconds())
+		}
+
+		time.AfterFunc(100*time.Millisecond, func() {
+			select {
+			case <-errCh:
+			default:
+			}
+		})
 		errCh <- err
 	}()
-
 	select {
 	case err := <-errCh:
-		timeout.Stop()
-		close(timeoutCh)
 		return block, err
-	case <-timeoutCh:
-		return nil, consensus.NewConsensusError(consensus.BlockCreationError, errors.New("block crea185tion timeout"))
+	case <-timeout:
+		if block != nil {
+			e.logger.Info("Create block has something wrong ", block.GetHeight())
+		}
+		return nil, consensus.NewConsensusError(consensus.BlockCreationError, errors.New("block creation timeout"))
 	}
 
 }

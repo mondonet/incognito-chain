@@ -297,6 +297,9 @@ func (engine *Engine) Start() error {
 			case <-engine.cQuit:
 				return
 			default:
+				userKey, _ := engine.GetCurrentMiningPublicKey()
+				metrics.SetGlobalParam("MINING_PUBKEY", userKey)
+
 				time.Sleep(time.Millisecond * 1000)
 				for chainName, consensus := range engine.ChainConsensusList {
 					if chainName == engine.CurrentMiningChain && engine.userCurrentState.UserRole == common.CommitteeRole {
@@ -538,4 +541,6 @@ func (engine *Engine) updateUserState(keySet *incognitokey.CommitteePublicKey, l
 	}
 }
 
-// IF finalView.height == change consensus height then change consensus
+func (engine *Engine) GetMiningPublicKeys() map[string]incognitokey.CommitteePublicKey {
+	return engine.userMiningPublicKeys
+}

@@ -133,7 +133,7 @@ func (connManager *ConnManager) UpdateConsensusState(role string, userPbk string
 	// update peer connection
 	if bChange {
 		connManager.config.ConsensusState.rebuild()
-		go connManager.processDiscoverPeers()
+		//go connManager.processDiscoverPeers()
 	}
 
 	return bChange

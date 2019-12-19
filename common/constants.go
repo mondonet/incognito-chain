@@ -100,6 +100,7 @@ const (
 	EthAddrStr    = "0x0000000000000000000000000000000000000000"
 )
 
+// Bridge & PDE statuses for RPCs
 const (
 	BridgeRequestNotFoundStatus   = 0
 	BridgeRequestProcessingStatus = 1
@@ -108,9 +109,10 @@ const (
 
 	PDENotFoundStatus = 0
 
-	PDEContributionWaitingStatus  = 1
-	PDEContributionAcceptedStatus = 2
-	PDEContributionRefundStatus   = 3
+	PDEContributionWaitingStatus          = 1
+	PDEContributionAcceptedStatus         = 2
+	PDEContributionRefundStatus           = 3
+	PDEContributionMatchedNReturnedStatus = 4
 
 	PDETradeAcceptedStatus = 1
 	PDETradeRefundStatus   = 2
@@ -118,5 +120,19 @@ const (
 	PDEWithdrawalAcceptedStatus = 1
 	PDEWithdrawalRejectedStatus = 2
 
-	MinInitialAddingLiquidity = 10000000000000 // 10000 prv
+	MinTxFeesOnTokenRequirement = 10000000000000 // 10000 prv
+)
+
+// PDE statuses for chain
+const (
+	PDEContributionWaitingChainStatus          = "waiting"
+	PDEContributionMatchedChainStatus          = "matched"
+	PDEContributionRefundChainStatus           = "refund"
+	PDEContributionMatchedNReturnedChainStatus = "matchedNReturned"
+
+	PDETradeAcceptedChainStatus = "accepted"
+	PDETradeRefundChainStatus   = "refund"
+
+	PDEWithdrawalAcceptedChainStatus = "accepted"
+	PDEWithdrawalRejectedChainStatus = "rejected"
 )

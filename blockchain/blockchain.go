@@ -67,16 +67,17 @@ type Config struct {
 	RandomClient      btc.RandomClient
 	Server            interface {
 		BoardcastNodeState() error
+		PublishNodeState(userLayer string, shardID int) error
 
-		PushMessageGetBlockBeaconByHeight(from uint64, to uint64, peerID libp2p.ID) error
+		PushMessageGetBlockBeaconByHeight(from uint64, to uint64) error
 		PushMessageGetBlockBeaconByHash(blksHash []common.Hash, getFromPool bool, peerID libp2p.ID) error
-		PushMessageGetBlockBeaconBySpecificHeight(heights []uint64, getFromPool bool, peerID libp2p.ID) error
+		PushMessageGetBlockBeaconBySpecificHeight(heights []uint64, getFromPool bool) error
 
-		PushMessageGetBlockShardByHeight(shardID byte, from uint64, to uint64, peerID libp2p.ID) error
+		PushMessageGetBlockShardByHeight(shardID byte, from uint64, to uint64) error
 		PushMessageGetBlockShardByHash(shardID byte, blksHash []common.Hash, getFromPool bool, peerID libp2p.ID) error
-		PushMessageGetBlockShardBySpecificHeight(shardID byte, heights []uint64, getFromPool bool, peerID libp2p.ID) error
+		PushMessageGetBlockShardBySpecificHeight(shardID byte, heights []uint64, getFromPool bool) error
 
-		PushMessageGetBlockShardToBeaconByHeight(shardID byte, from uint64, to uint64, peerID libp2p.ID) error
+		PushMessageGetBlockShardToBeaconByHeight(shardID byte, from uint64, to uint64) error
 		PushMessageGetBlockShardToBeaconByHash(shardID byte, blksHash []common.Hash, getFromPool bool, peerID libp2p.ID) error
 		PushMessageGetBlockShardToBeaconBySpecificHeight(shardID byte, blksHeight []uint64, getFromPool bool, peerID libp2p.ID) error
 
@@ -96,6 +97,10 @@ type Config struct {
 		GetUserRole() (string, string, int)
 		IsOngoing(chainName string) bool
 		CommitteeChange(chainName string)
+	}
+
+	Highway interface {
+		BroadcastCommittee(uint64, []incognitokey.CommitteePublicKey, map[byte][]incognitokey.CommitteePublicKey, map[byte][]incognitokey.CommitteePublicKey)
 	}
 }
 
@@ -759,10 +764,28 @@ func (blockchain *BlockChain) CreateAndSaveTxViewPointFromBlock(block *ShardBloc
 		switch privacyCustomTokenTx.TxPrivacyTokenData.Type {
 		case transaction.CustomTokenInit:
 			{
-				Logger.log.Info("Store custom token when it is issued", privacyCustomTokenTx.TxPrivacyTokenData.PropertyID, privacyCustomTokenTx.TxPrivacyTokenData.PropertySymbol, privacyCustomTokenTx.TxPrivacyTokenData.PropertyName)
-				err = blockchain.config.DataBase.StorePrivacyToken(privacyCustomTokenTx.TxPrivacyTokenData.PropertyID, privacyCustomTokenTx.Hash()[:])
+				// check is bridge token
+				isBridgeToken := false
+				allBridgeTokensBytes, err := blockchain.config.DataBase.GetAllBridgeTokens()
 				if err != nil {
 					return err
+				}
+				if len(allBridgeTokensBytes) > 0 {
+					var allBridgeTokens []*lvdb.BridgeTokenInfo
+					err = json.Unmarshal(allBridgeTokensBytes, &allBridgeTokens)
+					for _, bridgeToken := range allBridgeTokens {
+						if bridgeToken.TokenID != nil && bytes.Equal(privacyCustomTokenTx.TxPrivacyTokenData.PropertyID[:], bridgeToken.TokenID[:]) {
+							isBridgeToken = true
+						}
+					}
+				}
+				// not mintable tx
+				if !isBridgeToken && !privacyCustomTokenTx.TxPrivacyTokenData.Mintable {
+					Logger.log.Info("Store custom token when it is issued", privacyCustomTokenTx.TxPrivacyTokenData.PropertyID, privacyCustomTokenTx.TxPrivacyTokenData.PropertySymbol, privacyCustomTokenTx.TxPrivacyTokenData.PropertyName)
+					err = blockchain.config.DataBase.StorePrivacyToken(privacyCustomTokenTx.TxPrivacyTokenData.PropertyID, privacyCustomTokenTx.Hash()[:])
+					if err != nil {
+						return err
+					}
 				}
 			}
 		case transaction.CustomTokenTransfer:

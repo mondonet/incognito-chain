@@ -293,190 +293,188 @@ func (blockchain *BlockChain) verifyPreProcessingShardBlock(shardBlock *ShardBlo
 	// 	return NewBlockChainError(WrongVersionError, fmt.Errorf("Expect shardBlock version %+v but get %+v", SHARD_BLOCK_VERSION, shardBlock.Header.Version))
 	// }
 
-	// // if shardBlock.Header.Height > blockchain.FinalView.Shard[shardID].ShardHeight+1 {
-	// // 	return NewBlockChainError(WrongBlockHeightError, fmt.Errorf("Expect shardBlock height %+v but get %+v", blockchain.FinalView.Shard[shardID].ShardHeight+1, shardBlock.Header.Height))
-	// // }
-	// // Verify parent hash exist or not
-	// previousBlockHash := shardBlock.Header.PreviousBlockHash
-	// previousShardBlockData, err := blockchain.config.DataBase.FetchBlock(previousBlockHash)
-	// if err != nil {
-	// 	if !isPreSign {
-	// 		Logger.log.Criticalf("FORK SHARD DETECTED shardID=%+v at BlockHeight=%+v hash=%+v pre-hash=%+v",
-	// 			shardID,
-	// 			shardBlock.Header.Height,
-	// 			shardBlock.Hash().String(),
-	// 			previousBlockHash.String())
-
-	// 		blockchain.Synker.SyncBlkShard(shardID, true, false, false, []common.Hash{previousBlockHash}, nil, 0, 0, "")
-	// 		Logger.log.Critical("SEND REQUEST FOR BLOCK HASH", previousBlockHash.String(), shardBlock.Header.Height, shardBlock.Header.ShardID)
-	// 		revertErr := blockchain.revertShardState(shardID)
-	// 		if revertErr != nil {
-	// 			Logger.log.Error("blockchain.revertShardState error", revertErr)
-	// 			return errors.WithStack(revertErr)
-	// 		}
-	// 	}
-	// 	return NewBlockChainError(FetchPreviousBlockError, err)
-	// }
-	// previousShardBlock := ShardBlock{}
-	// err = json.Unmarshal(previousShardBlockData, &previousShardBlock)
-	// if err != nil {
-	// 	return NewBlockChainError(UnmashallJsonShardBlockError, err)
-	// }
-	// // Verify shardBlock height with parent shardBlock
-	// if previousShardBlock.Header.Height+1 != shardBlock.Header.Height {
-	// 	return NewBlockChainError(WrongBlockHeightError, fmt.Errorf("Expect receive shardBlock height %+v but get %+v", previousShardBlock.Header.Height+1, shardBlock.Header.Height))
-	// }
-	// // Verify timestamp with parent shardBlock
-	// if shardBlock.Header.Timestamp <= previousShardBlock.Header.Timestamp {
-	// 	return NewBlockChainError(WrongTimestampError, fmt.Errorf("Expect receive shardBlock has timestamp must be greater than %+v but get %+v", previousShardBlock.Header.Timestamp, shardBlock.Header.Timestamp))
-	// }
-	// // Verify transaction root
-	// txMerkleTree := Merkle{}.BuildMerkleTreeStore(shardBlock.Body.Transactions)
-	// txRoot := &common.Hash{}
-	// if len(txMerkleTree) > 0 {
-	// 	txRoot = txMerkleTree[len(txMerkleTree)-1]
-	// }
-	// if !bytes.Equal(shardBlock.Header.TxRoot.GetBytes(), txRoot.GetBytes()) {
-	// 	return NewBlockChainError(TransactionRootHashError, fmt.Errorf("Expect transaction root hash %+v but get %+v", shardBlock.Header.TxRoot, txRoot))
-	// }
-	// // Verify ShardTx Root
-	// _, shardTxMerkleData := CreateShardTxRoot2(shardBlock.Body.Transactions)
-	// shardTxRoot := shardTxMerkleData[len(shardTxMerkleData)-1]
-	// if !bytes.Equal(shardBlock.Header.ShardTxRoot.GetBytes(), shardTxRoot.GetBytes()) {
-	// 	return NewBlockChainError(ShardTransactionRootHashError, fmt.Errorf("Expect shard transaction root hash %+v but get %+v", shardBlock.Header.ShardTxRoot, shardTxRoot))
-	// }
-	// // Verify crossTransaction coin
-	// if !VerifyMerkleCrossTransaction(shardBlock.Body.CrossTransactions, shardBlock.Header.CrossTransactionRoot) {
-	// 	return NewBlockChainError(CrossShardTransactionRootHashError, fmt.Errorf("Expect cross shard transaction root hash %+v", shardBlock.Header.CrossTransactionRoot))
-	// }
-	// // Verify Action
-	// txInstructions, err := CreateShardInstructionsFromTransactionAndInstruction(shardBlock.Body.Transactions, blockchain, shardID)
-	// if err != nil {
-	// 	Logger.log.Error(err)
-	// 	return NewBlockChainError(ShardIntructionFromTransactionAndInstructionError, err)
-	// }
-	// if !isPreSign {
-	// 	totalInstructions := []string{}
-	// 	for _, value := range txInstructions {
-	// 		totalInstructions = append(totalInstructions, value...)
-	// 	}
-	// 	for _, value := range shardBlock.Body.Instructions {
-	// 		totalInstructions = append(totalInstructions, value...)
-	// 	}
-	// 	if hash, ok := verifyHashFromStringArray(totalInstructions, shardBlock.Header.InstructionsRoot); !ok {
-	// 		return NewBlockChainError(InstructionsHashError, fmt.Errorf("Expect instruction hash to be %+v but get %+v", shardBlock.Header.InstructionsRoot, hash))
-	// 	}
-	// }
-	// totalTxsFee := make(map[common.Hash]uint64)
-	// for _, tx := range shardBlock.Body.Transactions {
-	// 	totalTxsFee[*tx.GetTokenID()] += tx.GetTxFee()
-	// 	txType := tx.GetType()
-	// 	if txType == common.TxCustomTokenPrivacyType {
-	// 		txCustomPrivacy := tx.(*transaction.TxCustomTokenPrivacy)
-	// 		totalTxsFee[*txCustomPrivacy.GetTokenID()] = txCustomPrivacy.GetTxFeeToken()
-	// 	}
-	// }
-	// tokenIDsfromTxs := make([]common.Hash, 0)
-	// for tokenID := range totalTxsFee {
-	// 	tokenIDsfromTxs = append(tokenIDsfromTxs, tokenID)
-	// }
-	// sort.Slice(tokenIDsfromTxs, func(i int, j int) bool {
-	// 	res, _ := tokenIDsfromTxs[i].Cmp(&tokenIDsfromTxs[j])
-	// 	return res == -1
-	// })
-	// tokenIDsfromBlock := make([]common.Hash, 0)
-	// for tokenID := range shardBlock.Header.TotalTxsFee {
-	// 	tokenIDsfromBlock = append(tokenIDsfromBlock, tokenID)
-	// }
-	// sort.Slice(tokenIDsfromBlock, func(i int, j int) bool {
-	// 	res, _ := tokenIDsfromBlock[i].Cmp(&tokenIDsfromBlock[j])
-	// 	return res == -1
-	// })
-	// if len(tokenIDsfromTxs) != len(tokenIDsfromBlock) {
-	// 	return NewBlockChainError(WrongBlockTotalFeeError, fmt.Errorf("Expect Total Fee to be equal, From Txs %+v, From Block %+v", len(tokenIDsfromTxs), len(tokenIDsfromBlock)))
-	// }
-	// for i, tokenID := range tokenIDsfromTxs {
-	// 	if !tokenIDsfromTxs[i].IsEqual(&tokenIDsfromBlock[i]) {
-	// 		return NewBlockChainError(WrongBlockTotalFeeError, fmt.Errorf("Expect Total Fee to be equal, From Txs %+v, From Block %+v", tokenIDsfromTxs[i], tokenIDsfromBlock[i]))
-	// 	}
-	// 	if totalTxsFee[tokenID] != shardBlock.Header.TotalTxsFee[tokenID] {
-	// 		return NewBlockChainError(WrongBlockTotalFeeError, fmt.Errorf("Expect Total Fee to be equal, From Txs %+v, From Block Header %+v", totalTxsFee[tokenID], shardBlock.Header.TotalTxsFee[tokenID]))
-	// 	}
-	// }
-	// // Verify Cross Shards
-	// crossShards := CreateCrossShardByteArray(shardBlock.Body.Transactions, shardID)
-	// if len(crossShards) != len(shardBlock.Header.CrossShardBitMap) {
-	// 	return NewBlockChainError(CrossShardBitMapError, fmt.Errorf("Expect number of cross shardID is %+v but get %+v", len(shardBlock.Header.CrossShardBitMap), len(crossShards)))
-	// }
-	// for index := range crossShards {
-	// 	if crossShards[index] != shardBlock.Header.CrossShardBitMap[index] {
-	// 		return NewBlockChainError(CrossShardBitMapError, fmt.Errorf("Expect Cross Shard Bitmap of shardID %+v is %+v but get %+v", index, shardBlock.Header.CrossShardBitMap[index], crossShards[index]))
-	// 	}
-	// }
-	// // Check if InstructionMerkleRoot is the root of merkle tree containing all instructions in this shardBlock
-	// flattenTxInsts, err := FlattenAndConvertStringInst(txInstructions)
-	// if err != nil {
-	// 	return NewBlockChainError(FlattenAndConvertStringInstError, fmt.Errorf("Instruction from Tx: %+v", err))
-	// }
-	// flattenInsts, err := FlattenAndConvertStringInst(shardBlock.Body.Instructions)
-	// if err != nil {
-	// 	return NewBlockChainError(FlattenAndConvertStringInstError, fmt.Errorf("Instruction from shardBlock body: %+v", err))
-	// }
-	// insts := append(flattenTxInsts, flattenInsts...) // Order of instructions must be the same as when creating new shard shardBlock
-	// root := GetKeccak256MerkleRoot(insts)
-	// if !bytes.Equal(root, shardBlock.Header.InstructionMerkleRoot[:]) {
-	// 	return NewBlockChainError(InstructionMerkleRootError, fmt.Errorf("Expect transaction merkle root to be %+v but get %+v", shardBlock.Header.InstructionMerkleRoot, string(root)))
-	// }
-	// //Get beacon hash by height in db
-	// //If hash not found then fail to verify
-	// beaconHash, err := blockchain.config.DataBase.GetBeaconBlockHashByIndex(shardBlock.Header.BeaconHeight)
-	// if err != nil {
-	// 	return NewBlockChainError(FetchBeaconBlockHashError, err)
-	// }
-	// //Hash in db must be equal to hash in shard shardBlock
-	// newHash, err := common.Hash{}.NewHash(shardBlock.Header.BeaconHash.GetBytes())
-	// if err != nil {
-	// 	return NewBlockChainError(HashError, err)
-	// }
-	// if !newHash.IsEqual(&beaconHash) {
-	// 	return NewBlockChainError(BeaconBlockNotCompatibleError, fmt.Errorf("Expect beacon shardBlock hash to be %+v but get %+v", beaconHash, newHash))
-	// }
-	// // Swap instruction
-	// for _, l := range shardBlock.Body.Instructions {
-	// 	if l[0] == "swap" {
-	// 		if l[3] != "shard" || l[4] != strconv.Itoa(int(shardID)) {
-	// 			return NewBlockChainError(SwapInstructionError, fmt.Errorf("invalid swap instruction %+v", l))
-	// 		}
-	// 	}
-	// }
-	// // Verify response transactions
-	// instsForValidations := [][]string{}
-	// instsForValidations = append(instsForValidations, shardBlock.Body.Instructions...)
-	// for _, beaconBlock := range beaconBlocks {
-	// 	instsForValidations = append(instsForValidations, beaconBlock.Body.Instructions...)
-	// }
-	// invalidTxs, err := blockchain.verifyMinerCreatedTxBeforeGettingInBlock(instsForValidations, shardBlock.Body.Transactions, shardID)
-	// if err != nil {
-	// 	return NewBlockChainError(TransactionCreatedByMinerError, err)
-	// }
-	// if len(invalidTxs) > 0 {
-	// 	return NewBlockChainError(TransactionCreatedByMinerError, fmt.Errorf("There are %d invalid txs", len(invalidTxs)))
-	// }
-	// err = blockchain.ValidateResponseTransactionFromTxsWithMetadata(&shardBlock.Body)
-	// if err != nil {
-	// 	return NewBlockChainError(ResponsedTransactionWithMetadataError, err)
-	// }
-	// // Get cross shard shardBlock from pool
-	// // @NOTICE: COMMENT to bypass verify cross shard shardBlock
-	// if isPreSign {
-	// 	err := blockchain.verifyPreProcessingShardBlockForSigning(shardBlock, beaconBlocks, txInstructions, shardID)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-	// Logger.log.Debugf("SHARD %+v | Finish verifyPreProcessingShardBlock Block with height %+v at hash %+v", shardBlock.Header.ShardID, shardBlock.Header.Height, shardBlock.Hash())
-	// return err
-	return nil
+	if shardBlock.Header.Height > blockchain.BestState.Shard[shardID].ShardHeight+1 {
+		return NewBlockChainError(WrongBlockHeightError, fmt.Errorf("Expect shardBlock height %+v but get %+v", blockchain.BestState.Shard[shardID].ShardHeight+1, shardBlock.Header.Height))
+	}
+	// Verify parent hash exist or not
+	previousBlockHash := shardBlock.Header.PreviousBlockHash
+	previousShardBlockData, err := blockchain.config.DataBase.FetchBlock(previousBlockHash)
+	if err != nil {
+		Logger.log.Criticalf("FORK SHARD DETECTED shardID=%+v at BlockHeight=%+v hash=%+v pre-hash=%+v",
+			shardID,
+			shardBlock.Header.Height,
+			shardBlock.Hash().String(),
+			previousBlockHash.String())
+		blockchain.Synker.SyncBlkShard(shardID, true, false, false, []common.Hash{previousBlockHash}, nil, 0, 0, "")
+		Logger.log.Critical("SEND REQUEST FOR BLOCK HASH", previousBlockHash.String(), shardBlock.Header.Height, shardBlock.Header.ShardID)
+		if !isPreSign {
+			revertErr := blockchain.revertShardState(shardID)
+			if revertErr != nil {
+				Logger.log.Error("blockchain.revertShardState error", revertErr)
+				return errors.WithStack(revertErr)
+			}
+		}
+		return NewBlockChainError(FetchPreviousBlockError, err)
+	}
+	previousShardBlock := ShardBlock{}
+	err = json.Unmarshal(previousShardBlockData, &previousShardBlock)
+	if err != nil {
+		return NewBlockChainError(UnmashallJsonShardBlockError, err)
+	}
+	// Verify shardBlock height with parent shardBlock
+	if previousShardBlock.Header.Height+1 != shardBlock.Header.Height {
+		return NewBlockChainError(WrongBlockHeightError, fmt.Errorf("Expect receive shardBlock height %+v but get %+v", previousShardBlock.Header.Height+1, shardBlock.Header.Height))
+	}
+	// Verify timestamp with parent shardBlock
+	if shardBlock.Header.Timestamp <= previousShardBlock.Header.Timestamp {
+		return NewBlockChainError(WrongTimestampError, fmt.Errorf("Expect receive shardBlock has timestamp must be greater than %+v but get %+v", previousShardBlock.Header.Timestamp, shardBlock.Header.Timestamp))
+	}
+	// Verify transaction root
+	txMerkleTree := Merkle{}.BuildMerkleTreeStore(shardBlock.Body.Transactions)
+	txRoot := &common.Hash{}
+	if len(txMerkleTree) > 0 {
+		txRoot = txMerkleTree[len(txMerkleTree)-1]
+	}
+	if !bytes.Equal(shardBlock.Header.TxRoot.GetBytes(), txRoot.GetBytes()) {
+		return NewBlockChainError(TransactionRootHashError, fmt.Errorf("Expect transaction root hash %+v but get %+v", shardBlock.Header.TxRoot, txRoot))
+	}
+	// Verify ShardTx Root
+	_, shardTxMerkleData := CreateShardTxRoot2(shardBlock.Body.Transactions)
+	shardTxRoot := shardTxMerkleData[len(shardTxMerkleData)-1]
+	if !bytes.Equal(shardBlock.Header.ShardTxRoot.GetBytes(), shardTxRoot.GetBytes()) {
+		return NewBlockChainError(ShardTransactionRootHashError, fmt.Errorf("Expect shard transaction root hash %+v but get %+v", shardBlock.Header.ShardTxRoot, shardTxRoot))
+	}
+	// Verify crossTransaction coin
+	if !VerifyMerkleCrossTransaction(shardBlock.Body.CrossTransactions, shardBlock.Header.CrossTransactionRoot) {
+		return NewBlockChainError(CrossShardTransactionRootHashError, fmt.Errorf("Expect cross shard transaction root hash %+v", shardBlock.Header.CrossTransactionRoot))
+	}
+	// Verify Action
+	txInstructions, err := CreateShardInstructionsFromTransactionAndInstruction(shardBlock.Body.Transactions, blockchain, shardID)
+	if err != nil {
+		Logger.log.Error(err)
+		return NewBlockChainError(ShardIntructionFromTransactionAndInstructionError, err)
+	}
+	if !isPreSign {
+		totalInstructions := []string{}
+		for _, value := range txInstructions {
+			totalInstructions = append(totalInstructions, value...)
+		}
+		for _, value := range shardBlock.Body.Instructions {
+			totalInstructions = append(totalInstructions, value...)
+		}
+		if hash, ok := verifyHashFromStringArray(totalInstructions, shardBlock.Header.InstructionsRoot); !ok {
+			return NewBlockChainError(InstructionsHashError, fmt.Errorf("Expect instruction hash to be %+v but get %+v", shardBlock.Header.InstructionsRoot, hash))
+		}
+	}
+	totalTxsFee := make(map[common.Hash]uint64)
+	for _, tx := range shardBlock.Body.Transactions {
+		totalTxsFee[*tx.GetTokenID()] += tx.GetTxFee()
+		txType := tx.GetType()
+		if txType == common.TxCustomTokenPrivacyType {
+			txCustomPrivacy := tx.(*transaction.TxCustomTokenPrivacy)
+			totalTxsFee[*txCustomPrivacy.GetTokenID()] = txCustomPrivacy.GetTxFeeToken()
+		}
+	}
+	tokenIDsfromTxs := make([]common.Hash, 0)
+	for tokenID := range totalTxsFee {
+		tokenIDsfromTxs = append(tokenIDsfromTxs, tokenID)
+	}
+	sort.Slice(tokenIDsfromTxs, func(i int, j int) bool {
+		res, _ := tokenIDsfromTxs[i].Cmp(&tokenIDsfromTxs[j])
+		return res == -1
+	})
+	tokenIDsfromBlock := make([]common.Hash, 0)
+	for tokenID := range shardBlock.Header.TotalTxsFee {
+		tokenIDsfromBlock = append(tokenIDsfromBlock, tokenID)
+	}
+	sort.Slice(tokenIDsfromBlock, func(i int, j int) bool {
+		res, _ := tokenIDsfromBlock[i].Cmp(&tokenIDsfromBlock[j])
+		return res == -1
+	})
+	if len(tokenIDsfromTxs) != len(tokenIDsfromBlock) {
+		return NewBlockChainError(WrongBlockTotalFeeError, fmt.Errorf("Expect Total Fee to be equal, From Txs %+v, From Block %+v", len(tokenIDsfromTxs), len(tokenIDsfromBlock)))
+	}
+	for i, tokenID := range tokenIDsfromTxs {
+		if !tokenIDsfromTxs[i].IsEqual(&tokenIDsfromBlock[i]) {
+			return NewBlockChainError(WrongBlockTotalFeeError, fmt.Errorf("Expect Total Fee to be equal, From Txs %+v, From Block %+v", tokenIDsfromTxs[i], tokenIDsfromBlock[i]))
+		}
+		if totalTxsFee[tokenID] != shardBlock.Header.TotalTxsFee[tokenID] {
+			return NewBlockChainError(WrongBlockTotalFeeError, fmt.Errorf("Expect Total Fee to be equal, From Txs %+v, From Block Header %+v", totalTxsFee[tokenID], shardBlock.Header.TotalTxsFee[tokenID]))
+		}
+	}
+	// Verify Cross Shards
+	crossShards := CreateCrossShardByteArray(shardBlock.Body.Transactions, shardID)
+	if len(crossShards) != len(shardBlock.Header.CrossShardBitMap) {
+		return NewBlockChainError(CrossShardBitMapError, fmt.Errorf("Expect number of cross shardID is %+v but get %+v", len(shardBlock.Header.CrossShardBitMap), len(crossShards)))
+	}
+	for index := range crossShards {
+		if crossShards[index] != shardBlock.Header.CrossShardBitMap[index] {
+			return NewBlockChainError(CrossShardBitMapError, fmt.Errorf("Expect Cross Shard Bitmap of shardID %+v is %+v but get %+v", index, shardBlock.Header.CrossShardBitMap[index], crossShards[index]))
+		}
+	}
+	// Check if InstructionMerkleRoot is the root of merkle tree containing all instructions in this shardBlock
+	flattenTxInsts, err := FlattenAndConvertStringInst(txInstructions)
+	if err != nil {
+		return NewBlockChainError(FlattenAndConvertStringInstError, fmt.Errorf("Instruction from Tx: %+v", err))
+	}
+	flattenInsts, err := FlattenAndConvertStringInst(shardBlock.Body.Instructions)
+	if err != nil {
+		return NewBlockChainError(FlattenAndConvertStringInstError, fmt.Errorf("Instruction from shardBlock body: %+v", err))
+	}
+	insts := append(flattenTxInsts, flattenInsts...) // Order of instructions must be the same as when creating new shard shardBlock
+	root := GetKeccak256MerkleRoot(insts)
+	if !bytes.Equal(root, shardBlock.Header.InstructionMerkleRoot[:]) {
+		return NewBlockChainError(InstructionMerkleRootError, fmt.Errorf("Expect transaction merkle root to be %+v but get %+v", shardBlock.Header.InstructionMerkleRoot, string(root)))
+	}
+	//Get beacon hash by height in db
+	//If hash not found then fail to verify
+	beaconHash, err := blockchain.config.DataBase.GetBeaconBlockHashByIndex(shardBlock.Header.BeaconHeight)
+	if err != nil {
+		return NewBlockChainError(FetchBeaconBlockHashError, err)
+	}
+	//Hash in db must be equal to hash in shard shardBlock
+	newHash, err := common.Hash{}.NewHash(shardBlock.Header.BeaconHash.GetBytes())
+	if err != nil {
+		return NewBlockChainError(HashError, err)
+	}
+	if !newHash.IsEqual(&beaconHash) {
+		return NewBlockChainError(BeaconBlockNotCompatibleError, fmt.Errorf("Expect beacon shardBlock hash to be %+v but get %+v", beaconHash, newHash))
+	}
+	// Swap instruction
+	for _, l := range shardBlock.Body.Instructions {
+		if l[0] == "swap" {
+			if l[3] != "shard" || l[4] != strconv.Itoa(int(shardID)) {
+				return NewBlockChainError(SwapInstructionError, fmt.Errorf("invalid swap instruction %+v", l))
+			}
+		}
+	}
+	// Verify response transactions
+	instsForValidations := [][]string{}
+	instsForValidations = append(instsForValidations, shardBlock.Body.Instructions...)
+	for _, beaconBlock := range beaconBlocks {
+		instsForValidations = append(instsForValidations, beaconBlock.Body.Instructions...)
+	}
+	invalidTxs, err := blockchain.verifyMinerCreatedTxBeforeGettingInBlock(instsForValidations, shardBlock.Body.Transactions, shardID)
+	if err != nil {
+		return NewBlockChainError(TransactionCreatedByMinerError, err)
+	}
+	if len(invalidTxs) > 0 {
+		return NewBlockChainError(TransactionCreatedByMinerError, fmt.Errorf("There are %d invalid txs", len(invalidTxs)))
+	}
+	err = blockchain.ValidateResponseTransactionFromTxsWithMetadata(&shardBlock.Body)
+	if err != nil {
+		return NewBlockChainError(ResponsedTransactionWithMetadataError, err)
+	}
+	// Get cross shard shardBlock from pool
+	// @NOTICE: COMMENT to bypass verify cross shard shardBlock
+	if isPreSign {
+		err := blockchain.verifyPreProcessingShardBlockForSigning(shardBlock, beaconBlocks, txInstructions, shardID)
+		if err != nil {
+			return err
+		}
+	}
+	Logger.log.Debugf("SHARD %+v | Finish verifyPreProcessingShardBlock Block with height %+v at hash %+v", shardBlock.Header.ShardID, shardBlock.Header.Height, shardBlock.Hash())
+	return err
 }
 
 /*
