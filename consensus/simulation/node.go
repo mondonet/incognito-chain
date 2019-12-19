@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/incognitochain/incognito-chain/blockchain/chain"
-	"github.com/incognitochain/incognito-chain/blockchain/shard"
 	"os"
+
+	"github.com/incognitochain/incognito-chain/blockchain"
+	"github.com/incognitochain/incognito-chain/blockchain/chain"
+	"github.com/incognitochain/incognito-chain/consensus"
 
 	"github.com/incognitochain/incognito-chain/common"
 	blsbft "github.com/incognitochain/incognito-chain/consensus/blsbft2"
@@ -16,7 +18,7 @@ import (
 type Node struct {
 	id              string
 	consensusEngine *blsbft.BLSBFT
-	chain           chain.ChainManagerInterface
+	chain           consensus.ChainManagerInterface
 	nodeList        []*Node
 }
 
@@ -36,7 +38,7 @@ func NewNode(committeePkStruct []incognitokey.CommitteePublicKey, committee []st
 	name := fmt.Sprintf("node_%d", index)
 	node := Node{id: fmt.Sprintf("%d", index)}
 
-	node.chain = chain.InitNewChain("shard0", &shard.ShardView{})
+	node.chain = chain.InitNewChain("shard0", &blockchain.ShardView{})
 	//node.chain.UserPubKey = committeePkStruct[index]
 
 	fd, err := os.OpenFile(fmt.Sprintf("%s.log", name), os.O_CREATE|os.O_WRONLY, 0666)
@@ -68,7 +70,7 @@ func (s *Node) Start() {
 	s.consensusEngine.Start()
 }
 
-func (s *Node) PushMessageToChain(msg wire.Message, chain chain.ChainManagerInterface) error {
+func (s *Node) PushMessageToChain(msg interface{}, chain consensus.ChainManagerInterface) error {
 	if msg.(*wire.MessageBFT).Type == "propose" {
 		timeSlot := GetTimeSlot(msg.(*wire.MessageBFT).Timestamp)
 		pComm := GetSimulation().scenario.proposeComm
@@ -140,7 +142,7 @@ func (Node) DropAllConnections() {
 	return
 }
 
-func (Node) PushMessageToPeer(msg wire.Message, peerId libp2p.ID) error {
+func (Node) PushMessageToPeer(msg interface{}, peerId libp2p.ID) error {
 	return nil
 }
 

@@ -3,11 +3,13 @@ package blockchain
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/incognitochain/incognito-chain/blockchain/chain"
+
+	// "github.com/incognitochain/incognito-chain/blockchain/chain"
 	"sync"
 	"time"
 
 	"github.com/incognitochain/incognito-chain/common"
+	"github.com/incognitochain/incognito-chain/consensus"
 	"github.com/incognitochain/incognito-chain/incognitokey"
 	"github.com/pkg/errors"
 )
@@ -167,18 +169,18 @@ func (chain *ShardChain) GetFinalViewLastProposerIndex() int {
 	return 0
 }
 
-func (chain *ShardChain) GetBestView() chain.ChainViewInterface {
+func (chain *ShardChain) GetBestView() consensus.ChainViewInterface {
 	return nil
 }
-func (chain *ShardChain) GetAllViews() map[string]chain.ChainViewInterface {
+func (chain *ShardChain) GetAllViews() map[string]consensus.ChainViewInterface {
 	return nil
 }
 
-func (chain *ShardChain) GetViewByHash(hash *common.Hash) (chain.ChainViewInterface, error) {
+func (chain *ShardChain) GetViewByHash(hash *common.Hash) (consensus.ChainViewInterface, error) {
 	return nil, nil
 }
 
-func (chain *ShardChain) GetFinalView() chain.ChainViewInterface {
+func (chain *ShardChain) GetFinalView() consensus.ChainViewInterface {
 	return nil
 }
 
@@ -186,7 +188,7 @@ func (chain *ShardChain) storeView() error {
 	return nil
 }
 
-func (chain *ShardChain) deleteView(view chain.ChainViewInterface) error {
+func (chain *ShardChain) deleteView(view consensus.ChainViewInterface) error {
 	return nil
 }
 
@@ -205,15 +207,15 @@ func (chain *ShardChain) GetAllTipBlocksHash() []*common.Hash {
 	return result
 }
 
-func (chain *ShardChain) AddView(view chain.ChainViewInterface) error {
+func (chain *ShardChain) AddView(view consensus.ChainViewInterface) error {
 	chain.lock.Lock()
 	defer chain.lock.Unlock()
 	chain.addView(view.(*ShardView))
 	return nil
 }
 
-func (chain *ShardChain) addView(view *ShardView) error {
-	chain.views[view.Hash().String()] = view
+func (chain *ShardChain) addView(view consensus.ChainViewInterface) error {
+	chain.views[view.Hash().String()] = view.(*ShardView)
 	return nil
 }
 

@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/incognitochain/incognito-chain/blockchain/chain"
 	"time"
+
+	// "github.com/incognitochain/incognito-chain/blockchain/chain"
 
 	"github.com/incognitochain/incognito-chain/common"
 	"github.com/incognitochain/incognito-chain/consensus"
@@ -219,11 +220,12 @@ func (e *BLSBFT) processRequestBlkMsg(requestMsg *BFTRequestBlock) error {
 	return nil
 }
 
-func (e *BLSBFT) ProcessBFTMsg(msg *wire.MessageBFT) {
-	switch msg.Type {
+func (e *BLSBFT) ProcessBFTMsg(msg consensus.ConsensusMsgInterface) {
+	msgBFT := msg.(*wire.MessageBFT)
+	switch msgBFT.Type {
 	case MSG_PROPOSE:
 		var msgPropose BFTPropose
-		err := json.Unmarshal(msg.Content, &msgPropose)
+		err := json.Unmarshal(msgBFT.Content, &msgPropose)
 		if err != nil {
 			e.Logger.Error(err)
 			return
@@ -231,7 +233,7 @@ func (e *BLSBFT) ProcessBFTMsg(msg *wire.MessageBFT) {
 		go e.processProposeMsg(&msgPropose)
 	case MSG_VOTE:
 		var msgVote BFTVote
-		err := json.Unmarshal(msg.Content, &msgVote)
+		err := json.Unmarshal(msgBFT.Content, &msgVote)
 		if err != nil {
 			e.Logger.Error(err)
 			return
@@ -239,7 +241,7 @@ func (e *BLSBFT) ProcessBFTMsg(msg *wire.MessageBFT) {
 		go e.processVoteMsg(&msgVote)
 	case MSG_REQUESTBLK:
 		var msgRequest BFTRequestBlock
-		err := json.Unmarshal(msg.Content, &msgRequest)
+		err := json.Unmarshal(msgBFT.Content, &msgRequest)
 		if err != nil {
 			e.Logger.Error(err)
 			return
@@ -308,7 +310,7 @@ func (blockCI *blockConsensusInstance) createAndSendVote() error {
 	return nil
 }
 
-func validateProposeBlock(block common.BlockInterface, view chain.ChainViewInterface) (BFTVote, error) {
+func validateProposeBlock(block common.BlockInterface, view consensus.ChainViewInterface) (BFTVote, error) {
 	err := view.ValidateBlock(block, true)
 	if err != nil {
 		return BFTVote{}, err
@@ -318,7 +320,7 @@ func validateProposeBlock(block common.BlockInterface, view chain.ChainViewInter
 	return v, nil
 }
 
-func (blockCI *blockConsensusInstance) initInstance(view chain.ChainViewInterface) error {
+func (blockCI *blockConsensusInstance) initInstance(view consensus.ChainViewInterface) error {
 	return nil
 }
 
@@ -371,7 +373,7 @@ func (blockCI *blockConsensusInstance) addBlock(block common.BlockInterface) err
 	return nil
 }
 
-func (e *BLSBFT) createBlockConsensusInstance(view chain.ChainViewInterface, blockHash string) (*blockConsensusInstance, error) {
+func (e *BLSBFT) createBlockConsensusInstance(view consensus.ChainViewInterface, blockHash string) (*blockConsensusInstance, error) {
 	e.lockOnGoingBlocks.Lock()
 	defer e.lockOnGoingBlocks.Unlock()
 	var blockCI blockConsensusInstance
@@ -430,8 +432,8 @@ func (blockCI *blockConsensusInstance) FinalizeBlock() error {
 	}
 	view, err := blockCI.View.ConnectBlockAndCreateView(blockCI.Block)
 	if err != nil {
-		//if blockchainError, ok := err.(*blockchain.BlockChainError); ok {
-		//	if blockchainError.Code == blockchain.ErrCodeMessage[blockchain.DuplicateShardBlockError].Code {
+		//if blockchainError, ok := err.(*blockconsensus.BlockChainError); ok {
+		//	if blockchainError.Code == blockconsensus.ErrCodeMessage[blockconsensus.DuplicateShardBlockError].Code {
 		//		return nil
 		//	}
 		//}

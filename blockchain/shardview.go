@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/incognitochain/incognito-chain/common"
+	"github.com/incognitochain/incognito-chain/consensus"
 	"github.com/incognitochain/incognito-chain/incognitokey"
 	"github.com/incognitochain/incognito-chain/metadata"
 )
@@ -209,7 +210,7 @@ func (view ShardView) GetBeaconHeight() uint64 {
 	return view.TipBlock.GetBeaconHeight()
 }
 
-func (view *ShardView) cloneShardViewFrom(target ChainViewInterface) error {
+func (view *ShardView) cloneShardViewFrom(target consensus.ChainViewInterface) error {
 	tempMarshal, err := json.Marshal(target)
 	if err != nil {
 		return NewBlockChainError(MashallJsonShardBestStateError, fmt.Errorf("Shard Best State %+v get %+v", target.GetHeight(), err))
@@ -356,7 +357,7 @@ func (view ShardView) GetPreviousViewHash() *common.Hash {
 func (view ShardView) UpdateViewWithBlock(block common.BlockInterface) error {
 	return nil
 }
-func (view ShardView) CloneViewFrom(new_view *common.ChainViewInterface) error {
+func (view ShardView) CloneViewFrom(new_view consensus.ChainViewInterface) error {
 	return nil
 }
 
@@ -364,7 +365,7 @@ func (view ShardView) ValidateBlock(block common.BlockInterface, isPreSign bool)
 	return nil
 }
 
-func (view ShardView) ConnectBlockAndCreateView(block common.BlockInterface) (common.ChainViewInterface, error) {
+func (view ShardView) ConnectBlockAndCreateView(block common.BlockInterface) (consensus.ChainViewInterface, error) {
 	return nil, nil
 }
 

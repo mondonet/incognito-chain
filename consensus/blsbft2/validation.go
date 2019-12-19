@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/incognitochain/incognito-chain/blockchain/chain"
 
 	"github.com/incognitochain/incognito-chain/common"
 	"github.com/incognitochain/incognito-chain/common/base58"
@@ -50,7 +49,7 @@ func (e BLSBFT) CreateValidationData(block common.BlockInterface) ValidationData
 	return valData
 }
 
-func (e BLSBFT) validateProducer(block common.BlockInterface, view chain.ChainViewInterface, slotTime int64, committee []incognitokey.CommitteePublicKey, log common.Logger) error {
+func (e BLSBFT) validateProducer(block common.BlockInterface, view consensus.ChainViewInterface, slotTime int64, committee []incognitokey.CommitteePublicKey, log common.Logger) error {
 	log.Info("ValidateProducerPosition...")
 	if err := validateProducerPosition(block, view.GetGenesisTime(), slotTime, committee); err != nil {
 		return consensus.NewConsensusError(consensus.UnExpectedError, err)

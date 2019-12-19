@@ -2,7 +2,6 @@ package blsbftv2
 
 import (
 	"errors"
-	"github.com/incognitochain/incognito-chain/blockchain/chain"
 	"sync"
 	"time"
 
@@ -15,7 +14,7 @@ import (
 )
 
 type BLSBFT struct {
-	Chain    chain.ChainManagerInterface
+	Chain    consensus.ChainManagerInterface
 	Node     consensus.NodeInterface
 	ChainKey string
 	PeerID   string
@@ -159,7 +158,7 @@ func (e *BLSBFT) Start() error {
 	return nil
 }
 
-func (e BLSBFT) NewInstance(chain chain.ChainManagerInterface, chainKey string, node consensus.NodeInterface, logger common.Logger) consensus.ConsensusInterface {
+func (e BLSBFT) NewInstance(chain consensus.ChainManagerInterface, chainKey string, node consensus.NodeInterface, logger common.Logger) consensus.ConsensusInterface {
 	var newInstance BLSBFT
 	newInstance.Chain = chain
 	newInstance.ChainKey = chainKey

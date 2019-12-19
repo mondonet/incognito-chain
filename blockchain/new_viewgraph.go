@@ -2,15 +2,17 @@ package blockchain
 
 import (
 	"fmt"
-	"github.com/incognitochain/incognito-chain/blockchain/chain"
+	// "github.com/incognitochain/incognito-chain/blockchain/chain"
 	"os"
 	"sync"
+
+	"github.com/incognitochain/incognito-chain/consensus"
 
 	"github.com/incognitochain/incognito-chain/common"
 )
 
 type ViewNode struct {
-	view chain.ChainViewInterface
+	view consensus.ChainViewInterface
 	next map[common.Hash]*ViewNode
 	prev *ViewNode
 }
@@ -25,7 +27,7 @@ type ViewGraph struct {
 	lock        *sync.RWMutex
 }
 
-func NewViewGraph(name string, rootView chain.ChainViewInterface, lock *sync.RWMutex) *ViewGraph {
+func NewViewGraph(name string, rootView consensus.ChainViewInterface, lock *sync.RWMutex) *ViewGraph {
 	s := &ViewGraph{name: name, lock: lock}
 	s.leaf = make(map[common.Hash]*ViewNode)
 	s.node = make(map[common.Hash]*ViewNode)
@@ -40,7 +42,7 @@ func NewViewGraph(name string, rootView chain.ChainViewInterface, lock *sync.RWM
 	return s
 }
 
-func (s *ViewGraph) AddView(b chain.ChainViewInterface) {
+func (s *ViewGraph) AddView(b consensus.ChainViewInterface) {
 	newBlockHash := *b.GetTipBlock().Hash()
 	for h, v := range s.node {
 		if h == *b.GetTipBlock().GetPreviousViewHash() {
@@ -62,11 +64,11 @@ func (s *ViewGraph) update() {
 	s.updateConfirmBlock(s.bestView)
 }
 
-func (s *ViewGraph) GetBestView() chain.ChainViewInterface {
+func (s *ViewGraph) GetBestView() consensus.ChainViewInterface {
 	return s.bestView.view
 }
 
-func (s *ViewGraph) GetFinalView() chain.ChainViewInterface {
+func (s *ViewGraph) GetFinalView() consensus.ChainViewInterface {
 	return s.confirmView.view
 }
 

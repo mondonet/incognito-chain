@@ -1,9 +1,10 @@
 package chain
 
 import (
+	"time"
+
 	"github.com/incognitochain/incognito-chain/common"
 	"github.com/incognitochain/incognito-chain/incognitokey"
-	"time"
 )
 
 type ChainManagerInterface interface {
@@ -60,7 +61,7 @@ type ChainViewInterface interface {
 
 	DeleteView() error
 	UpdateViewWithBlock(block common.BlockInterface) error
-	CloneViewFrom(view *ChainViewInterface) error
+	CloneViewFrom(view ChainViewInterface) error
 
 	ValidateBlock(block common.BlockInterface, isPreSign bool) error
 	CreateNewBlock(timeslot uint64) (common.BlockInterface, error)

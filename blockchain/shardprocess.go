@@ -1,7 +1,11 @@
 package blockchain
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"sort"
+	"strconv"
 
 	"github.com/incognitochain/incognito-chain/database"
 
@@ -293,9 +297,9 @@ func (blockchain *BlockChain) verifyPreProcessingShardBlock(shardBlock *ShardBlo
 	// 	return NewBlockChainError(WrongVersionError, fmt.Errorf("Expect shardBlock version %+v but get %+v", SHARD_BLOCK_VERSION, shardBlock.Header.Version))
 	// }
 
-	if shardBlock.Header.Height > blockchain.BestState.Shard[shardID].ShardHeight+1 {
-		return NewBlockChainError(WrongBlockHeightError, fmt.Errorf("Expect shardBlock height %+v but get %+v", blockchain.BestState.Shard[shardID].ShardHeight+1, shardBlock.Header.Height))
-	}
+	// if shardBlock.Header.Height > blockchain.BestState.Shard[shardID].ShardHeight+1 {
+	// 	return NewBlockChainError(WrongBlockHeightError, fmt.Errorf("Expect shardBlock height %+v but get %+v", blockchain.BestState.Shard[shardID].ShardHeight+1, shardBlock.Header.Height))
+	// }
 	// Verify parent hash exist or not
 	previousBlockHash := shardBlock.Header.PreviousBlockHash
 	previousShardBlockData, err := blockchain.config.DataBase.FetchBlock(previousBlockHash)
@@ -307,13 +311,13 @@ func (blockchain *BlockChain) verifyPreProcessingShardBlock(shardBlock *ShardBlo
 			previousBlockHash.String())
 		blockchain.Synker.SyncBlkShard(shardID, true, false, false, []common.Hash{previousBlockHash}, nil, 0, 0, "")
 		Logger.log.Critical("SEND REQUEST FOR BLOCK HASH", previousBlockHash.String(), shardBlock.Header.Height, shardBlock.Header.ShardID)
-		if !isPreSign {
-			revertErr := blockchain.revertShardState(shardID)
-			if revertErr != nil {
-				Logger.log.Error("blockchain.revertShardState error", revertErr)
-				return errors.WithStack(revertErr)
-			}
-		}
+		// if !isPreSign {
+		// 	revertErr := blockchain.revertShardState(shardID)
+		// 	if revertErr != nil {
+		// 		Logger.log.Error("blockchain.revertShardState error", revertErr)
+		// 		return errors.WithStack(revertErr)
+		// 	}
+		// }
 		return NewBlockChainError(FetchPreviousBlockError, err)
 	}
 	previousShardBlock := ShardBlock{}

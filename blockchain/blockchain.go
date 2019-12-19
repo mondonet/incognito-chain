@@ -5,13 +5,14 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"github.com/incognitochain/incognito-chain/blockchain/chain"
 	"io"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/incognitochain/incognito-chain/consensus"
 
 	"github.com/incognitochain/incognito-chain/blockchain/btc"
 	"github.com/incognitochain/incognito-chain/common"
@@ -29,7 +30,7 @@ import (
 )
 
 type BlockChain struct {
-	Chains map[string]chain.ChainManagerInterface
+	Chains map[string]consensus.ChainManagerInterface
 	// FinalView *FinalView
 	config    Config
 	chainLock sync.Mutex
@@ -352,7 +353,7 @@ func (blockchain *BlockChain) initBeaconState() error {
 	return nil
 }
 
-func (bc BlockChain) GetClonedBeaconFinalView() (*BeaconView, error) {
+func (bc BlockChain) GetClonedBeaconFinalView() (consensus.ChainViewInterface, error) {
 	result := NewBeaconView()
 	view := bc.Chains[common.BeaconChainKey].GetFinalView()
 	err := result.cloneBeaconViewFrom(view)

@@ -3,11 +3,13 @@ package blockchain
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/incognitochain/incognito-chain/blockchain/chain"
+
+	// "github.com/incognitochain/incognito-chain/blockchain/chain"
 	"sync"
 	"time"
 
 	"github.com/incognitochain/incognito-chain/common"
+	"github.com/incognitochain/incognito-chain/consensus"
 	"github.com/incognitochain/incognito-chain/incognitokey"
 	"github.com/pkg/errors"
 )
@@ -211,18 +213,18 @@ func (chain *BeaconChain) GetFinalViewLastProposerIndex() int {
 	return 0
 }
 
-func (chain *BeaconChain) GetBestView() chain.ChainViewInterface {
+func (chain *BeaconChain) GetBestView() consensus.ChainViewInterface {
 	return nil
 }
-func (chain *BeaconChain) GetAllViews() map[string]chain.ChainViewInterface {
+func (chain *BeaconChain) GetAllViews() map[string]consensus.ChainViewInterface {
 	return nil
 }
 
-func (chain *BeaconChain) GetViewByHash(hash *common.Hash) (chain.ChainViewInterface, error) {
+func (chain *BeaconChain) GetViewByHash(hash *common.Hash) (consensus.ChainViewInterface, error) {
 	return nil, nil
 }
 
-func (chain *BeaconChain) GetFinalView() chain.ChainViewInterface {
+func (chain *BeaconChain) GetFinalView() consensus.ChainViewInterface {
 	return nil
 }
 
@@ -230,7 +232,7 @@ func (chain *BeaconChain) storeView() error {
 	return nil
 }
 
-func (chain *BeaconChain) deleteView(view chain.ChainViewInterface) error {
+func (chain *BeaconChain) deleteView(view consensus.ChainViewInterface) error {
 	return nil
 }
 
@@ -249,15 +251,15 @@ func (chain *BeaconChain) GetAllTipBlocksHash() []*common.Hash {
 	return result
 }
 
-func (chain *BeaconChain) AddView(view chain.ChainViewInterface) error {
+func (chain *BeaconChain) AddView(view consensus.ChainViewInterface) error {
 	chain.lock.Lock()
 	defer chain.lock.Unlock()
 	chain.addView(view.(*BeaconView))
 	return nil
 }
 
-func (chain *BeaconChain) addView(view *BeaconView) error {
-	chain.views[view.Hash().String()] = view
+func (chain *BeaconChain) addView(view consensus.ChainViewInterface) error {
+	chain.views[view.Hash().String()] = view.(*BeaconView)
 	return nil
 }
 

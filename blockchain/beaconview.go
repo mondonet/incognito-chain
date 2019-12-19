@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/incognitochain/incognito-chain/blockchain/chain"
+	"github.com/incognitochain/incognito-chain/consensus"
 	"github.com/incognitochain/incognito-chain/incognitokey"
 
 	"github.com/incognitochain/incognito-chain/common"
@@ -526,7 +526,7 @@ func (view *BeaconView) GetBeaconPendingValidator() []incognitokey.CommitteePubl
 	defer view.lock.RUnlock()
 	return view.BeaconPendingValidator
 }
-func (view *BeaconView) cloneBeaconViewFrom(target chain.ChainViewInterface) error {
+func (view *BeaconView) cloneBeaconViewFrom(target consensus.ChainViewInterface) error {
 	tempMarshal, err := json.Marshal(target)
 	if err != nil {
 		return NewBlockChainError(MashallJsonBeaconBestStateError, fmt.Errorf("Shard Best State %+v get %+v", view.BeaconHeight, err))
@@ -542,7 +542,7 @@ func (view *BeaconView) cloneBeaconViewFrom(target chain.ChainViewInterface) err
 	return nil
 }
 
-func (view *BeaconView) CloneBeaconViewFrom(target chain.ChainViewInterface) error {
+func (view *BeaconView) CloneBeaconViewFrom(target consensus.ChainViewInterface) error {
 	return view.cloneBeaconViewFrom(target)
 }
 func (view *BeaconView) updateLastCrossShardState(shardStates map[byte][]ShardState) {
@@ -733,14 +733,14 @@ func (view *BeaconView) GetPreviousViewHash() *common.Hash {
 func (view *BeaconView) UpdateViewWithBlock(block common.BlockInterface) error {
 	return nil
 }
-func (view *BeaconView) CloneViewFrom(viewToClone *chain.ChainViewInterface) error {
+func (view *BeaconView) CloneViewFrom(viewToClone consensus.ChainViewInterface) error {
 	return nil
 }
 
 func (view *BeaconView) ValidateBlock(block common.BlockInterface, isPreSign bool) error {
 	return nil
 }
-func (view *BeaconView) ConnectBlockAndCreateView(block common.BlockInterface) (chain.ChainViewInterface, error) {
+func (view *BeaconView) ConnectBlockAndCreateView(block common.BlockInterface) (consensus.ChainViewInterface, error) {
 	return nil, nil
 }
 

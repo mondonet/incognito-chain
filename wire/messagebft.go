@@ -56,3 +56,7 @@ func (msg *MessageBFT) SignMsg(keySet *incognitokey.KeySet) error {
 func (msg *MessageBFT) VerifyMsgSanity() error {
 	return nil
 }
+
+func (msg *MessageBFT) GetChainKey() string {
+	return msg.ChainKey
+}

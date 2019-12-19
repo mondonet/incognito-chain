@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/incognitochain/incognito-chain/common"
+	"github.com/incognitochain/incognito-chain/consensus"
 	"github.com/incognitochain/incognito-chain/incognitokey"
 )
 
@@ -38,7 +39,7 @@ func (s *ChainManager) GetChainData() (res []byte) {
 }
 
 //create new chain with root manager
-func InitNewChain(name string, rootView ChainViewInterface) *ChainManager {
+func InitNewChain(name string, rootView consensus.ChainViewInterface) *ChainManager {
 	cm := &ChainManager{
 		name: name,
 		lock: new(sync.RWMutex),
@@ -56,8 +57,9 @@ func LoadChain(data []byte) (res *ChainManager) {
 	return res
 }
 
-func (s *ChainManager) AddChainView(view ChainViewInterface) {
+func (s *ChainManager) AddView(view consensus.ChainViewInterface) error {
 	s.manager.AddView(view)
+	return nil
 }
 
 func (ChainManager) GetChainName() string {
@@ -124,19 +126,19 @@ func (s *ChainManager) GetShardID() int {
 	panic("implement me")
 }
 
-func (s ChainManager) GetBestView() ChainViewInterface {
+func (s ChainManager) GetBestView() consensus.ChainViewInterface {
 	return s.manager.GetBestView()
 }
 
-func (s ChainManager) GetFinalView() ChainViewInterface {
+func (s ChainManager) GetFinalView() consensus.ChainViewInterface {
 	return s.manager.GetBestView()
 }
 
-func (ChainManager) GetAllViews() map[string]ChainViewInterface {
+func (ChainManager) GetAllViews() map[string]consensus.ChainViewInterface {
 	panic("implement me")
 }
 
-func (s *ChainManager) GetViewByHash(h *common.Hash) (ChainViewInterface, error) {
+func (s *ChainManager) GetViewByHash(h *common.Hash) (consensus.ChainViewInterface, error) {
 	viewnode, ok := s.manager.node[*h]
 	if !ok {
 		return nil, errors.New("view not exist")
