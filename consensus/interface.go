@@ -23,7 +23,7 @@ type NodeInterface interface {
 
 type ConsensusInterface interface {
 	// NewInstance - Create a new instance of this consensus
-	NewInstance(chain blockchain.ChainManagerInterface, chainKey string, node NodeInterface, logger common.Logger) ConsensusInterface
+	//NewInstance(chain blockchain.ChainManagerInterface, chainKey string, node NodeInterface, logger common.Logger) ConsensusInterface
 	// GetConsensusName - retrieve consensus name
 	GetConsensusName() string
 

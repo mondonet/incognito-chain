@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/incognitochain/incognito-chain/blockchain"
+	"github.com/incognitochain/incognito-chain/blockchain/chain"
 	"os"
 
-	"github.com/incognitochain/incognito-chain/blockchain"
 	"github.com/incognitochain/incognito-chain/common"
 	blsbft "github.com/incognitochain/incognito-chain/consensus/blsbft2"
-	"github.com/incognitochain/incognito-chain/consensus/chain"
 	"github.com/incognitochain/incognito-chain/incognitokey"
 	"github.com/incognitochain/incognito-chain/wire"
 	libp2p "github.com/libp2p/go-libp2p-peer"
@@ -16,7 +16,7 @@ import (
 type Node struct {
 	id              string
 	consensusEngine *blsbft.BLSBFT
-	chain           *chain.ViewManager
+	chain           common.ChainManagerInterface
 	nodeList        []*Node
 }
 
@@ -35,7 +35,6 @@ func (s logWriter) Write(p []byte) (n int, err error) {
 func NewNode(committeePkStruct []incognitokey.CommitteePublicKey, committee []string, index int) *Node {
 	name := fmt.Sprintf("node_%d", index)
 	node := Node{id: fmt.Sprintf("%d", index)}
-	//TODO: create new ChainViewManager with ShardView as ViewInterface
 
 	node.chain = chain.InitNewChain("shard0", &blockchain.ShardView{})
 	//node.chain.UserPubKey = committeePkStruct[index]
@@ -69,7 +68,7 @@ func (s *Node) Start() {
 	s.consensusEngine.Start()
 }
 
-func (s *Node) PushMessageToChain(msg wire.Message, chain blockchain.ChainInterface) error {
+func (s *Node) PushMessageToChain(msg wire.Message, chain blockchain.ChainManagerInterface) error {
 	if msg.(*wire.MessageBFT).Type == "propose" {
 		timeSlot := GetTimeSlot(msg.(*wire.MessageBFT).Timestamp)
 		pComm := GetSimulation().scenario.proposeComm

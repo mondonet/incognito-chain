@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/incognitochain/incognito-chain/blockchain"
 	"github.com/incognitochain/incognito-chain/common"
 	"github.com/incognitochain/incognito-chain/consensus"
 	"github.com/incognitochain/incognito-chain/consensus/signatureschemes/blsmultisig"
@@ -15,7 +14,7 @@ import (
 )
 
 type BLSBFT struct {
-	Chain    blockchain.ChainManagerInterface
+	Chain    common.ChainManagerInterface
 	Node     consensus.NodeInterface
 	ChainKey string
 	PeerID   string
@@ -159,7 +158,7 @@ func (e *BLSBFT) Start() error {
 	return nil
 }
 
-func (e BLSBFT) NewInstance(chain blockchain.ChainManagerInterface, chainKey string, node consensus.NodeInterface, logger common.Logger) consensus.ConsensusInterface {
+func (e BLSBFT) NewInstance(chain common.ChainManagerInterface, chainKey string, node consensus.NodeInterface, logger common.Logger) consensus.ConsensusInterface {
 	var newInstance BLSBFT
 	newInstance.Chain = chain
 	newInstance.ChainKey = chainKey
