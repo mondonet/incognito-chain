@@ -3,6 +3,7 @@ package blockchain
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/incognitochain/incognito-chain/blockchain/chain"
 	"sync"
 	"time"
 
@@ -166,18 +167,18 @@ func (chain *ShardChain) GetFinalViewLastProposerIndex() int {
 	return 0
 }
 
-func (chain *ShardChain) GetBestView() ChainViewInterface {
+func (chain *ShardChain) GetBestView() chain.ChainViewInterface {
 	return nil
 }
-func (chain *ShardChain) GetAllViews() map[string]ChainViewInterface {
+func (chain *ShardChain) GetAllViews() map[string]chain.ChainViewInterface {
 	return nil
 }
 
-func (chain *ShardChain) GetViewByHash(hash *common.Hash) (ChainViewInterface, error) {
+func (chain *ShardChain) GetViewByHash(hash *common.Hash) (chain.ChainViewInterface, error) {
 	return nil, nil
 }
 
-func (chain *ShardChain) GetFinalView() ChainViewInterface {
+func (chain *ShardChain) GetFinalView() chain.ChainViewInterface {
 	return nil
 }
 
@@ -185,7 +186,7 @@ func (chain *ShardChain) storeView() error {
 	return nil
 }
 
-func (chain *ShardChain) deleteView(view ChainViewInterface) error {
+func (chain *ShardChain) deleteView(view chain.ChainViewInterface) error {
 	return nil
 }
 
@@ -204,7 +205,7 @@ func (chain *ShardChain) GetAllTipBlocksHash() []*common.Hash {
 	return result
 }
 
-func (chain *ShardChain) AddView(view ChainViewInterface) error {
+func (chain *ShardChain) AddView(view chain.ChainViewInterface) error {
 	chain.lock.Lock()
 	defer chain.lock.Unlock()
 	chain.addView(view.(*ShardView))

@@ -3,6 +3,7 @@ package blockchain
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/incognitochain/incognito-chain/blockchain/chain"
 	"sync"
 	"time"
 
@@ -210,18 +211,18 @@ func (chain *BeaconChain) GetFinalViewLastProposerIndex() int {
 	return 0
 }
 
-func (chain *BeaconChain) GetBestView() ChainViewInterface {
+func (chain *BeaconChain) GetBestView() chain.ChainViewInterface {
 	return nil
 }
-func (chain *BeaconChain) GetAllViews() map[string]ChainViewInterface {
+func (chain *BeaconChain) GetAllViews() map[string]chain.ChainViewInterface {
 	return nil
 }
 
-func (chain *BeaconChain) GetViewByHash(hash *common.Hash) (ChainViewInterface, error) {
+func (chain *BeaconChain) GetViewByHash(hash *common.Hash) (chain.ChainViewInterface, error) {
 	return nil, nil
 }
 
-func (chain *BeaconChain) GetFinalView() ChainViewInterface {
+func (chain *BeaconChain) GetFinalView() chain.ChainViewInterface {
 	return nil
 }
 
@@ -229,7 +230,7 @@ func (chain *BeaconChain) storeView() error {
 	return nil
 }
 
-func (chain *BeaconChain) deleteView(view ChainViewInterface) error {
+func (chain *BeaconChain) deleteView(view chain.ChainViewInterface) error {
 	return nil
 }
 
@@ -248,7 +249,7 @@ func (chain *BeaconChain) GetAllTipBlocksHash() []*common.Hash {
 	return result
 }
 
-func (chain *BeaconChain) AddView(view ChainViewInterface) error {
+func (chain *BeaconChain) AddView(view chain.ChainViewInterface) error {
 	chain.lock.Lock()
 	defer chain.lock.Unlock()
 	chain.addView(view.(*BeaconView))
