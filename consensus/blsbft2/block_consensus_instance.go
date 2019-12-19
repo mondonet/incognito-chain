@@ -1,15 +1,15 @@
 package blsbftv2
 
 import (
+	"github.com/incognitochain/incognito-chain/consensus"
 	"sync"
 
-	"github.com/incognitochain/incognito-chain/blockchain"
 	"github.com/incognitochain/incognito-chain/common"
 )
 
 type blockConsensusInstance struct {
 	Engine         *BLSBFT
-	View           blockchain.ChainViewInterface
+	View           consensus.ChainViewInterface
 	ConsensusCfg   consensusConfig
 	Block          common.BlockInterface
 	ValidationData ValidationData

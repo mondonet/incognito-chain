@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/incognitochain/incognito-chain/blockchain"
 	"github.com/incognitochain/incognito-chain/blockchain/chain"
+	"github.com/incognitochain/incognito-chain/consensus"
 	"os"
 
 	"github.com/incognitochain/incognito-chain/common"
@@ -16,7 +17,7 @@ import (
 type Node struct {
 	id              string
 	consensusEngine *blsbft.BLSBFT
-	chain           common.ChainManagerInterface
+	chain           consensus.ChainManagerInterface
 	nodeList        []*Node
 }
 
@@ -68,7 +69,7 @@ func (s *Node) Start() {
 	s.consensusEngine.Start()
 }
 
-func (s *Node) PushMessageToChain(msg wire.Message, chain blockchain.ChainManagerInterface) error {
+func (s *Node) PushMessageToChain(msg wire.Message, chain consensus.ChainManagerInterface) error {
 	if msg.(*wire.MessageBFT).Type == "propose" {
 		timeSlot := GetTimeSlot(msg.(*wire.MessageBFT).Timestamp)
 		pComm := GetSimulation().scenario.proposeComm

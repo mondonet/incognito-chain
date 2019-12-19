@@ -356,7 +356,7 @@ func (view ShardView) GetPreviousViewHash() *common.Hash {
 func (view ShardView) UpdateViewWithBlock(block common.BlockInterface) error {
 	return nil
 }
-func (view ShardView) CloneViewFrom(vue *common.ChainManagerInterface) error {
+func (view ShardView) CloneViewFrom(new_view *common.ChainViewInterface) error {
 	return nil
 }
 

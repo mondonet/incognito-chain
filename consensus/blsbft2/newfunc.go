@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/incognitochain/incognito-chain/blockchain"
 	"github.com/incognitochain/incognito-chain/common"
 	"github.com/incognitochain/incognito-chain/consensus"
 	"github.com/incognitochain/incognito-chain/consensus/signatureschemes/blsmultisig"
@@ -308,7 +307,7 @@ func (blockCI *blockConsensusInstance) createAndSendVote() error {
 	return nil
 }
 
-func validateProposeBlock(block common.BlockInterface, view blockchain.ChainViewInterface) (BFTVote, error) {
+func validateProposeBlock(block common.BlockInterface, view consensus.ChainViewInterface) (BFTVote, error) {
 	err := view.ValidateBlock(block, true)
 	if err != nil {
 		return BFTVote{}, err
@@ -318,7 +317,7 @@ func validateProposeBlock(block common.BlockInterface, view blockchain.ChainView
 	return v, nil
 }
 
-func (blockCI *blockConsensusInstance) initInstance(view blockchain.ChainViewInterface) error {
+func (blockCI *blockConsensusInstance) initInstance(view consensus.ChainViewInterface) error {
 	return nil
 }
 
@@ -371,7 +370,7 @@ func (blockCI *blockConsensusInstance) addBlock(block common.BlockInterface) err
 	return nil
 }
 
-func (e *BLSBFT) createBlockConsensusInstance(view blockchain.ChainViewInterface, blockHash string) (*blockConsensusInstance, error) {
+func (e *BLSBFT) createBlockConsensusInstance(view consensus.ChainViewInterface, blockHash string) (*blockConsensusInstance, error) {
 	e.lockOnGoingBlocks.Lock()
 	defer e.lockOnGoingBlocks.Unlock()
 	var blockCI blockConsensusInstance
@@ -430,11 +429,11 @@ func (blockCI *blockConsensusInstance) FinalizeBlock() error {
 	}
 	view, err := blockCI.View.ConnectBlockAndCreateView(blockCI.Block)
 	if err != nil {
-		if blockchainError, ok := err.(*blockchain.BlockChainError); ok {
-			if blockchainError.Code == blockchain.ErrCodeMessage[blockchain.DuplicateShardBlockError].Code {
-				return nil
-			}
-		}
+		//if blockchainError, ok := err.(*blockchain.BlockChainError); ok {
+		//	if blockchainError.Code == blockchain.ErrCodeMessage[blockchain.DuplicateShardBlockError].Code {
+		//		return nil
+		//	}
+		//}
 		return err
 	}
 	err = blockCI.Engine.Chain.AddView(view)
