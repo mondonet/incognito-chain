@@ -8,6 +8,7 @@ import (
 
 	"github.com/incognitochain/incognito-chain/blockchain"
 	"github.com/incognitochain/incognito-chain/common"
+	"github.com/incognitochain/incognito-chain/consensus"
 	"github.com/incognitochain/incognito-chain/mempool"
 	"github.com/incognitochain/incognito-chain/metadata"
 	"github.com/incognitochain/incognito-chain/peer"
@@ -51,11 +52,11 @@ type NetSyncConfig struct {
 	roleInCommitteesMtx   sync.RWMutex
 	Server                interface {
 		// list functions callback which are assigned from Server struct
-		PushMessageToPeer(wire.Message, libp2p.ID) error
+		PushMessageToPeer(interface{}, string) error
 		PushMessageToAll(wire.Message) error
 	}
 	Consensus interface {
-		OnBFTMsg(*wire.MessageBFT)
+		OnBFTMsg(consensus.ConsensusMsgInterface)
 	}
 }
 
@@ -154,7 +155,7 @@ out:
 							beaconHeight := int64(-1)
 							beaconBestState, err := netSync.config.BlockChain.GetClonedBeaconFinalView()
 							if err == nil {
-								beaconHeight = int64(beaconBestState.BeaconHeight)
+								beaconHeight = int64(beaconBestState.GetHeight())
 							} else {
 								Logger.log.Error(err)
 							}

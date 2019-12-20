@@ -3,6 +3,10 @@ package netsync
 import (
 	"encoding/json"
 	"fmt"
+	"sync/atomic"
+	"testing"
+	"time"
+
 	"github.com/incognitochain/incognito-chain/blockchain"
 	"github.com/incognitochain/incognito-chain/common"
 	"github.com/incognitochain/incognito-chain/common/base58"
@@ -11,10 +15,6 @@ import (
 	"github.com/incognitochain/incognito-chain/pubsub"
 	"github.com/incognitochain/incognito-chain/transaction"
 	"github.com/incognitochain/incognito-chain/wire"
-	libp2p "github.com/libp2p/go-libp2p-peer"
-	"sync/atomic"
-	"testing"
-	"time"
 )
 
 var (
@@ -198,7 +198,7 @@ func (consensus *Consensus) OnBFTMsg(*wire.MessageBFT) {
 
 type Server struct{}
 
-func (server *Server) PushMessageToPeer(wire.Message, libp2p.ID) error {
+func (server *Server) PushMessageToPeer(interface{}, string) error {
 	return nil
 }
 

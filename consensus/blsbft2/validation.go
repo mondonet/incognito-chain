@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/incognitochain/incognito-chain/common"
 	"github.com/incognitochain/incognito-chain/common/base58"
@@ -192,4 +193,86 @@ func validateVote(Vote *BFTVote) error {
 func (e BLSBFT) ValidateBlockWithConsensus(block common.BlockInterface) error {
 
 	return nil
+}
+
+func validateBlockWithView(block common.BlockInterface, view consensus.ChainViewInterface) (BFTVote, error) {
+	err := view.ValidateBlock(block, true)
+	if err != nil {
+		return BFTVote{}, err
+	}
+	var v BFTVote
+
+	return v, nil
+}
+
+func validateProducerPosition(block common.BlockInterface, genesisTime int64, slotTime int64, committee []incognitokey.CommitteePublicKey) error {
+	timeSlot := getTimeSlot(genesisTime, block.GetBlockTimestamp(), slotTime)
+	if block.GetTimeslot() != timeSlot {
+		return consensus.NewConsensusError(consensus.InvalidTimeslotError, fmt.Errorf("Timeslot should be %v instead of %v", timeSlot, block.GetTimeslot()))
+	}
+	return isProducer(timeSlot, committee, block.GetProducer())
+}
+
+func getProducerPosition(timeslot uint64, committeeLen uint64) uint64 {
+	return timeslot % committeeLen
+}
+
+func isProducer(timeslot uint64, committee []incognitokey.CommitteePublicKey, producerPbk string) error {
+	producerPosition := getProducerPosition(timeslot, uint64(len(committee)))
+	tempProducer, err := committee[producerPosition].ToBase58()
+	if err != nil {
+		return err
+	}
+	if tempProducer != producerPbk {
+		return consensus.NewConsensusError(consensus.UnExpectedError, fmt.Errorf("Producer should be should be %v instead of %v", tempProducer, producerPbk))
+	}
+	return nil
+}
+
+func (e *BLSBFT) validatePreSignBlock(block common.BlockInterface) (consensus.ChainViewInterface, error) {
+	currentViewTimeslot := e.currentTimeslotOfViews[block.GetPreviousViewHash().String()]
+
+	if block.GetTimeslot() > currentViewTimeslot {
+		// hmm... something wrong with local clock?
+		return nil, fmt.Errorf("this propose block has timeslot higher than current timeslot. BLOCK:%v CURRENT:%v", block.GetTimeslot(), currentViewTimeslot)
+	}
+	blockHash := block.Hash().String()
+	if blockHash == e.Chain.GetBestView().GetTipBlock().Hash().String() {
+		//send this block
+	}
+	e.lockOnGoingBlocks.RLock()
+	if _, ok := e.onGoingBlocks[blockHash]; ok {
+		if e.onGoingBlocks[blockHash].Block != nil {
+			e.lockOnGoingBlocks.RUnlock()
+			return nil, errors.New("already received this propose block")
+		}
+	}
+	e.lockOnGoingBlocks.RUnlock()
+
+	view, err := e.Chain.GetViewByHash(block.GetPreviousViewHash())
+	if err != nil {
+		if block.GetHeight() > e.Chain.GetBestView().GetHeight() {
+			//request block
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	consensusCfg, err := parseConsensusConfig(view.GetConsensusConfig())
+	if err != nil {
+		return nil, err
+	}
+	consensusSlottime, err := time.ParseDuration(consensusCfg.Slottime)
+	if err != nil {
+		return nil, err
+	}
+	// if view.GetHeight() == e.Chain.GetBestView().GetHeight() {
+	if err := e.validateProducer(block, view, int64(consensusSlottime.Seconds()), view.GetCommittee(), e.Logger); err != nil {
+		return nil, err
+	}
+	err = view.ValidateBlock(block, true)
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
 }

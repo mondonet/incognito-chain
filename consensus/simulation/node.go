@@ -12,7 +12,6 @@ import (
 	blsbft "github.com/incognitochain/incognito-chain/consensus/blsbft2"
 	"github.com/incognitochain/incognito-chain/incognitokey"
 	"github.com/incognitochain/incognito-chain/wire"
-	libp2p "github.com/libp2p/go-libp2p-peer"
 )
 
 type Node struct {
@@ -142,7 +141,7 @@ func (Node) DropAllConnections() {
 	return
 }
 
-func (Node) PushMessageToPeer(msg interface{}, peerId libp2p.ID) error {
+func (Node) PushMessageToPeer(msg interface{}, peerIDString string) error {
 	return nil
 }
 

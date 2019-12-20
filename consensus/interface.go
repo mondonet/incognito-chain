@@ -5,7 +5,6 @@ import (
 
 	"github.com/incognitochain/incognito-chain/common"
 	"github.com/incognitochain/incognito-chain/incognitokey"
-	libp2p "github.com/libp2p/go-libp2p-peer"
 )
 
 type BlockChainInterface interface {
@@ -18,9 +17,9 @@ type BlockGenInterface interface {
 }
 type NodeInterface interface {
 	// RequestSyncBlockByHash(blockHash *common.Hash, isUnknownView bool, tipBlocksHash []common.Hash, peerID libp2p.ID) error
-	// PushBlockToPeer(block common.BlockInterface, isShard bool, peerID libp2p.ID) error
+	PushBlockToPeer(block common.BlockInterface, peerID string) error
 	PushMessageToChain(msg interface{}, chain ChainManagerInterface) error
-	PushMessageToPeer(msg interface{}, peerId libp2p.ID) error
+	PushMessageToPeer(msg interface{}, peerID string) error
 
 	UpdateConsensusState(role string, userPbk string, currentShard *byte, beaconCommittee []string, shardCommittee map[byte][]string)
 	IsEnableMining() bool

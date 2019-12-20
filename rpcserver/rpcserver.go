@@ -17,7 +17,6 @@ import (
 	"github.com/incognitochain/incognito-chain/pubsub"
 	"github.com/incognitochain/incognito-chain/wallet"
 	"github.com/incognitochain/incognito-chain/wire"
-	peer2 "github.com/libp2p/go-libp2p-peer"
 )
 
 const (
@@ -73,7 +72,7 @@ type RpcServerConfig struct {
 	Server          interface {
 		// Push TxNormal Message
 		PushMessageToAll(message wire.Message) error
-		PushMessageToPeer(message wire.Message, id peer2.ID) error
+		PushMessageToPeer(message interface{}, IDstring string) error
 		GetNodeRole() string
 		// GetUserKeySet() *incognitokey.KeySet
 		EnableMining(enable bool) error

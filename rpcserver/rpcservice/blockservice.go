@@ -98,7 +98,11 @@ func (blockService BlockService) GetBeaconBestState() (*blockchain.BeaconView, e
 			Logger.log.Error("Json Unmarshal cache of shard best state error", err1)
 		}
 	} else {
-		beacon, err = blockService.BlockChain.GetClonedBeaconFinalView()
+		beaconView, err := blockService.BlockChain.GetClonedBeaconFinalView()
+		if err != nil {
+			return nil, err
+		}
+		beacon = beaconView.(*blockchain.BeaconView)
 		cacheValue, err := json.Marshal(beacon)
 		if err == nil {
 			err1 := blockService.MemCache.PutExpired(cachedKey, cacheValue, 10000)
@@ -115,7 +119,7 @@ func (blockService BlockService) GetBeaconBestBlock() (*blockchain.BeaconBlock, 
 	if err != nil {
 		return nil, err
 	}
-	return &clonedBeaconBestState.BestBlock, nil
+	return clonedBeaconBestState.GetTipBlock().(*blockchain.BeaconBlock), nil
 }
 
 func (blockService BlockService) GetBeaconBestBlockHash() (*common.Hash, error) {
@@ -123,7 +127,7 @@ func (blockService BlockService) GetBeaconBestBlockHash() (*common.Hash, error) 
 	if err != nil {
 		return nil, err
 	}
-	return &clonedBeaconBestState.BestBlockHash, nil
+	return clonedBeaconBestState.GetTipBlock().Hash(), nil
 }
 
 func (blockService BlockService) RetrieveShardBlock(hashString string, verbosity string) (*jsonresult.GetBlockResult, *RPCError) {
@@ -364,7 +368,7 @@ func (blockService BlockService) GetBlocks(shardIDParam int, numBlock int) (inte
 			if err != nil {
 				return nil, NewRPCError(GetClonedBeaconBestStateError, err)
 			}
-			bestBlock := clonedBeaconBestState.BestBlock
+			bestBlock := clonedBeaconBestState.GetTipBlock().(*blockchain.BeaconBlock)
 			previousHash := bestBlock.Hash()
 			for numBlock > 0 {
 				numBlock--

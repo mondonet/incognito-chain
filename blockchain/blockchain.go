@@ -33,7 +33,7 @@ type BlockChain struct {
 	Chains map[string]consensus.ChainManagerInterface
 	// FinalView *FinalView
 	config    Config
-	chainLock sync.Mutex
+	chainLock sync.RWMutex
 
 	cQuitSync        chan struct{}
 	Synker           Synker
@@ -2224,3 +2224,21 @@ func (blockchain *BlockChain) GetActiveShardNumber() int {
 // 	}
 // 	return nil
 // }
+
+func (blockchain *BlockChain) GetChain(chainName string) consensus.ChainManagerInterface {
+	chain, ok := blockchain.Chains[chainName]
+	if !ok {
+		return nil
+	}
+	return chain
+}
+func (blockchain *BlockChain) GetAllChains() map[string]consensus.ChainManagerInterface {
+	blockchain.chainLock.RLock()
+	var result map[string]consensus.ChainManagerInterface
+	result = make(map[string]consensus.ChainManagerInterface)
+	for chainName, chain := range blockchain.Chains {
+		result[chainName] = chain
+	}
+	blockchain.chainLock.RUnlock()
+	return result
+}
