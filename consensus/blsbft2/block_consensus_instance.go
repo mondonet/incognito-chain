@@ -139,6 +139,15 @@ func (blockCI *blockConsensusInstance) sendOwnVote() error {
 	return nil
 }
 
+func (blockCI *blockConsensusInstance) isFinalizable() bool {
+	blockCI.lockVote.Lock()
+	defer blockCI.lockVote.Unlock()
+	if blockCI.Block != nil && len(blockCI.Votes) > (2/3)*len(blockCI.Committee.StringList) {
+		return true
+	}
+	return false
+}
+
 func (e *BLSBFT) createBlockConsensusInstance(view consensus.ChainViewInterface, blockHash string) (*blockConsensusInstance, error) {
 	e.lockOnGoingBlocks.Lock()
 	defer e.lockOnGoingBlocks.Unlock()

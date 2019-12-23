@@ -100,12 +100,19 @@ func (e *BLSBFT) processProposeMsg(proposeMsg *BFTPropose) error {
 		}
 	case BlockIsMissingFromBlockConsensusInstanceError:
 		e.lockOnGoingBlocks.RLock()
-		defer e.lockOnGoingBlocks.RUnlock()
 		instance := e.onGoingBlocks[blockHash]
 		err := instance.addBlock(block)
 		if err != nil {
+			e.lockOnGoingBlocks.RUnlock()
 			return err
 		}
+		if instance.isFinalizable() {
+			err := instance.FinalizeBlock()
+			if err != nil {
+				return err
+			}
+		}
+		e.lockOnGoingBlocks.RUnlock()
 	case nil:
 		instance, err := e.createBlockConsensusInstance(view, blockHash)
 		if err != nil {
@@ -150,11 +157,22 @@ func (e *BLSBFT) processVoteMsg(vote *BFTVote) error {
 	if err := instance.addVote(vote); err != nil {
 		return err
 	}
-	voteMsg, err := MakeBFTVoteMsg(vote, e.ChainKey)
-	if err != nil {
-		return err
+	go func() {
+		voteMsg, err := MakeBFTVoteMsg(vote, e.ChainKey)
+		if err != nil {
+			e.Logger.Error(err)
+			return
+		}
+		e.Node.PushMessageToChain(voteMsg, e.Chain)
+
+	}()
+	if instance.isFinalizable() {
+		err := instance.FinalizeBlock()
+		if err != nil {
+			return err
+		}
 	}
-	e.Node.PushMessageToChain(voteMsg, e.Chain)
+
 	return nil
 }
 
