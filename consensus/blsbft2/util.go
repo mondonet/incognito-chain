@@ -92,12 +92,14 @@ func (vote *BFTVote) signVote(signFunc func(data []byte) ([]byte, error)) error 
 	return err
 }
 
-func getTimeSlot(genesisTime int64, pointInTime int64, slotTime int64) uint64 {
+func getTimeSlot(genesisTime int64, pointInTime int64, slotTime int64) (timeSlot uint64, nextTimeSlotIn time.Duration) {
 	slotTimeDur := time.Duration(slotTime)
 	blockTime := time.Unix(pointInTime, 0)
 	timePassed := blockTime.Sub(time.Unix(genesisTime, 0)).Round(slotTimeDur)
-	timeSlot := uint64(int64(timePassed.Seconds()) / slotTime)
-	return timeSlot
+	timeSlot = uint64(int64(timePassed.Seconds()) / slotTime)
+	nextTimeSlot := int64(timeSlot + 1)
+	nextTimeSlotIn = time.Unix(genesisTime+(nextTimeSlot*slotTime), 0).Sub(blockTime)
+	return
 }
 
 func parseConsensusConfig(config string) (*consensusConfig, error) {

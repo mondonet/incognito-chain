@@ -136,3 +136,9 @@ const (
 	PDEWithdrawalAcceptedChainStatus = "accepted"
 	PDEWithdrawalRejectedChainStatus = "rejected"
 )
+
+const (
+	VIEWDELETED    = "viewdeleted"
+	VIEWADDED      = "viewadded"
+	CHAINFINALIZED = "chainfinalized"
+)

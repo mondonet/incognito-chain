@@ -19,9 +19,10 @@ import (
 */
 
 type ChainManager struct {
-	manager *ViewGraph
-	name    string
-	lock    *sync.RWMutex
+	manager           *ViewGraph
+	name              string
+	changeSubscribers map[string]chan consensus.ChainUpdateInfo
+	lock              *sync.RWMutex
 }
 
 func (s *ChainManager) ConnectBlockAndAddView(block common.BlockInterface) error {
@@ -161,4 +162,23 @@ func (s *ChainManager) GetAllTipBlocksHash() []*common.Hash {
 		result = append(result, node.view.GetTipBlock().Hash())
 	}
 	return result
+}
+
+func (s *ChainManager) SubscribeChainUpdate(subscriberName string, updateCh chan consensus.ChainUpdateInfo) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	s.changeSubscribers[subscriberName] = updateCh
+}
+
+func (s *ChainManager) boardcastUpdate(action string, view consensus.ChainViewInterface) {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+	var change consensus.ChainUpdateInfo
+	change.Action = action
+	change.View = view
+	for _, chn := range s.changeSubscribers {
+		go func(subscriberCh chan consensus.ChainUpdateInfo) {
+			subscriberCh <- change
+		}(chn)
+	}
 }

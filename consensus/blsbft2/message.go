@@ -119,7 +119,6 @@ func (e *BLSBFT) processProposeMsg(proposeMsg *BFTPropose) error {
 			}
 		}
 		e.onGoingBlocks[blockHash].createAndSendVote()
-
 		e.lockOnGoingBlocks.RUnlock()
 	}
 

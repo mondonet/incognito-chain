@@ -206,7 +206,7 @@ func validateBlockWithView(block common.BlockInterface, view consensus.ChainView
 }
 
 func validateProducerPosition(block common.BlockInterface, genesisTime int64, slotTime int64, committee []incognitokey.CommitteePublicKey) error {
-	timeSlot := getTimeSlot(genesisTime, block.GetBlockTimestamp(), slotTime)
+	timeSlot, _ := getTimeSlot(genesisTime, block.GetBlockTimestamp(), slotTime)
 	if block.GetTimeslot() != timeSlot {
 		return consensus.NewConsensusError(consensus.InvalidTimeslotError, fmt.Errorf("Timeslot should be %v instead of %v", timeSlot, block.GetTimeslot()))
 	}
@@ -230,7 +230,15 @@ func isProducer(timeslot uint64, committee []incognitokey.CommitteePublicKey, pr
 }
 
 func (e *BLSBFT) validatePreSignBlock(block common.BlockInterface) (consensus.ChainViewInterface, error) {
-	currentViewTimeslot := e.currentTimeslotOfViews[block.GetPreviousViewHash().String()]
+	//get currentViewTimeslot by hand
+	view, err := e.Chain.GetViewByHash(block.GetPreviousViewHash())
+	if err != nil {
+		return nil, err
+	}
+	currentTime := time.Now().Unix()
+	consensusCfg, _ := parseConsensusConfig(view.GetConsensusConfig())
+	consensusSlottime, _ := time.ParseDuration(consensusCfg.Slottime)
+	currentViewTimeslot, _ := getTimeSlot(view.GetGenesisTime(), currentTime, int64(consensusSlottime.Seconds()))
 
 	if block.GetTimeslot() > currentViewTimeslot {
 		// hmm... something wrong with local clock?
@@ -249,23 +257,11 @@ func (e *BLSBFT) validatePreSignBlock(block common.BlockInterface) (consensus.Ch
 	}
 	e.lockOnGoingBlocks.RUnlock()
 
-	view, err := e.Chain.GetViewByHash(block.GetPreviousViewHash())
-	if err != nil {
-		if block.GetHeight() > e.Chain.GetBestView().GetHeight() {
-			//request block
-			return nil, nil
-		}
-		return nil, err
+	if block.GetHeight() > e.Chain.GetBestView().GetHeight()+1 {
+		//request block
+		return nil, nil
 	}
 
-	consensusCfg, err := parseConsensusConfig(view.GetConsensusConfig())
-	if err != nil {
-		return nil, err
-	}
-	consensusSlottime, err := time.ParseDuration(consensusCfg.Slottime)
-	if err != nil {
-		return nil, err
-	}
 	// if view.GetHeight() == e.Chain.GetBestView().GetHeight() {
 	if err := e.validateProducer(block, view, int64(consensusSlottime.Seconds()), view.GetCommittee(), e.Logger); err != nil {
 		return nil, err

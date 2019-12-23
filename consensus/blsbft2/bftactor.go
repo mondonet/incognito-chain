@@ -25,7 +25,7 @@ type BLSBFT struct {
 	StopCh       chan struct{}
 	Logger       common.Logger
 
-	currentTimeslotOfViews map[string]uint64
+	// currentTimeslotOfViews map[string]uint64
 	bestProposeBlockOfView map[string]string
 	onGoingBlocks          map[string]*blockConsensusInstance
 	lockOnGoingBlocks      sync.RWMutex
@@ -70,90 +70,15 @@ func (e *BLSBFT) Start() error {
 	}
 	e.isStarted = true
 	e.StopCh = make(chan struct{})
-	e.currentTimeslotOfViews = make(map[string]uint64)
+	// e.currentTimeslotOfViews = make(map[string]uint64)
 	e.bestProposeBlockOfView = make(map[string]string)
 	e.onGoingBlocks = make(map[string]*blockConsensusInstance)
 
 	//init view maps
-	ticker := time.Tick(1 * time.Second)
+	// ticker := time.Tick(1 * time.Second)
 	e.Logger.Info("start bls-bftv2 consensus for chain", e.ChainKey)
 	go func() {
-
-		currentTime := time.Now().Unix()
-		views := e.Chain.GetAllViews()
-		for _, view := range views {
-			consensusCfg, _ := parseConsensusConfig(view.GetConsensusConfig())
-			consensusSlottime, _ := time.ParseDuration(consensusCfg.Slottime)
-			timeSlot := getTimeSlot(view.GetGenesisTime(), currentTime, int64(consensusSlottime.Seconds()))
-			e.currentTimeslotOfViews[view.Hash().String()] = timeSlot
-		}
-
-		for { //actor loop
-			select {
-			case <-e.StopCh:
-				return
-			case <-ticker:
-				e.lockOnGoingBlocks.Lock()
-				//check if is proposer of bestview
-				bestView := e.Chain.GetBestView()
-				bestViewHash := bestView.Hash().String()
-				currentTime := time.Now().Unix()
-				consensusCfg, _ := parseConsensusConfig(bestView.GetConsensusConfig())
-				consensusSlottime, _ := time.ParseDuration(consensusCfg.Slottime)
-				timeSlot := getTimeSlot(bestView.GetGenesisTime(), currentTime, int64(consensusSlottime.Seconds()))
-				willProposeBlock := false
-				if _, ok := e.currentTimeslotOfViews[bestViewHash]; ok {
-					if e.currentTimeslotOfViews[bestViewHash]+1 == timeSlot {
-						willProposeBlock = true
-					}
-				} else {
-					willProposeBlock = true
-				}
-				if willProposeBlock {
-					if err := e.proposeBlock(timeSlot); err != nil {
-						e.Logger.Critical(consensus.UnExpectedError, errors.New("can't propose block"))
-					}
-				}
-				//update timeslot of views
-				//clean all view
-				views := e.Chain.GetAllViews()
-				for _, view := range views {
-					_, ok := e.currentTimeslotOfViews[view.Hash().String()]
-					if !ok {
-						continue
-					}
-					consensusCfg, _ := parseConsensusConfig(view.GetConsensusConfig())
-					consensusSlottime, _ := time.ParseDuration(consensusCfg.Slottime)
-					timeSlot := getTimeSlot(view.GetGenesisTime(), currentTime, int64(consensusSlottime.Seconds()))
-					e.currentTimeslotOfViews[view.Hash().String()] = timeSlot
-				}
-
-				for proposedBlockHash, proposedBlock := range e.onGoingBlocks {
-					if proposedBlock.Phase == votePhase {
-						if len(proposedBlock.Votes) > (2/3*len(proposedBlock.Committee.Committee))-1 {
-							err := proposedBlock.FinalizeBlock()
-							if err != nil {
-								//weird thing happend
-								panic(err)
-							}
-							go func(blockHash string) {
-								e.deleteOnGoingBlock(blockHash)
-							}(proposedBlockHash)
-						}
-					}
-				}
-				finalView := e.Chain.GetFinalView()
-				finalViewHeight := finalView.GetHeight()
-				for _, block := range e.onGoingBlocks {
-					if block.Block.GetHeight() <= finalViewHeight {
-						go func(blockHash string) {
-							e.deleteOnGoingBlock(blockHash)
-						}(block.Block.Hash().String())
-					}
-				}
-				e.lockOnGoingBlocks.Unlock()
-			}
-		}
+		e.viewWatcher(e.Chain.GetBestView())
 	}()
 	return nil
 }
@@ -179,4 +104,56 @@ func (e *BLSBFT) deleteOnGoingBlock(blockHash string) {
 	}
 	delete(e.onGoingBlocks, blockHash)
 	e.lockOnGoingBlocks.Unlock()
+}
+
+func (e *BLSBFT) chainWatcher() {
+	var updateCh chan consensus.ChainUpdateInfo
+	updateCh = make(chan consensus.ChainUpdateInfo)
+	e.Chain.SubscribeChainUpdate("BLSBFT", updateCh)
+
+	for {
+		update := <-updateCh
+		switch update.Action {
+		case common.VIEWDELETED:
+
+		case common.VIEWADDED:
+			e.viewWatcher(update.View)
+		case common.CHAINFINALIZED:
+
+		default:
+			continue
+		}
+	}
+}
+
+//viewWatcher - check whether view is best and in timeslot to propose block
+func (e *BLSBFT) viewWatcher(view consensus.ChainViewInterface) {
+	e.lockOnGoingBlocks.RLock()
+	viewHash := view.Hash().String()
+	var timeoutCh chan struct{}
+	timeoutCh = make(chan struct{})
+	for {
+		isBestView := (e.Chain.GetBestView().Hash().String() == viewHash)
+		currentTime := time.Now().Unix()
+		consensusCfg, _ := parseConsensusConfig(view.GetConsensusConfig())
+		consensusSlottime, _ := time.ParseDuration(consensusCfg.Slottime)
+		timeSlot, nextTimeSlotIn := getTimeSlot(view.GetGenesisTime(), currentTime, int64(consensusSlottime.Seconds()))
+		if isBestView {
+			if err := e.proposeBlock(timeSlot); err != nil {
+				e.Logger.Critical(consensus.UnExpectedError, errors.New("can't propose block"))
+			}
+		} else {
+			//clean up other related stuff
+			if e.proposedBlockOnView.ViewHash == viewHash {
+				e.proposedBlockOnView.ViewHash = ""
+				e.proposedBlockOnView.BlockHash = ""
+			}
+			return
+		}
+		timer := time.AfterFunc(nextTimeSlotIn, func() {
+			timeoutCh <- struct{}{}
+		})
+		<-timeoutCh
+		timer.Stop()
+	}
 }

@@ -102,6 +102,7 @@ type ChainManagerInterface interface {
 	GetAllTipBlocksHash() []*common.Hash
 	AddView(view ChainViewInterface) error
 	ConnectBlockAndAddView(block common.BlockInterface) error
+	SubscribeChainUpdate(subscriberName string, updateCh chan ChainUpdateInfo)
 }
 
 type ChainViewInterface interface {
@@ -137,4 +138,9 @@ type ChainViewInterface interface {
 
 type ConsensusMsgInterface interface {
 	GetChainKey() string
+}
+
+type ChainUpdateInfo struct {
+	Action string
+	View   ChainViewInterface
 }
