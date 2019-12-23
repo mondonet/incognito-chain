@@ -17,6 +17,7 @@ type blockConsensusInstance struct {
 	View           consensus.ChainViewInterface
 	ConsensusCfg   consensusConfig
 	Block          common.BlockInterface
+	Height         uint64
 	ValidationData ValidationData
 	Votes          map[string]*BFTVote
 	lockVote       sync.RWMutex
@@ -144,7 +145,7 @@ func (e *BLSBFT) createBlockConsensusInstance(view consensus.ChainViewInterface,
 	var blockCI blockConsensusInstance
 	blockCI.View = view
 	blockCI.Phase = listenPhase
-
+	blockCI.Height = view.GetHeight() + 1
 	var cfg consensusConfig
 	err := json.Unmarshal([]byte(view.GetConsensusConfig()), &cfg)
 	if err != nil {

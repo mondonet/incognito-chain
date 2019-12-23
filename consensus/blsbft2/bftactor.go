@@ -114,12 +114,17 @@ func (e *BLSBFT) chainWatcher() {
 	for {
 		update := <-updateCh
 		switch update.Action {
-		case common.VIEWDELETED:
-
 		case common.VIEWADDED:
 			e.viewWatcher(update.View)
 		case common.CHAINFINALIZED:
-
+			e.lockOnGoingBlocks.Lock()
+			defer e.lockOnGoingBlocks.Unlock()
+			finalizedHeight := e.Chain.GetBestView().GetHeight()
+			for blockHash, bcsi := range e.onGoingBlocks {
+				if bcsi.Height <= finalizedHeight {
+					delete(e.onGoingBlocks, blockHash)
+				}
+			}
 		default:
 			continue
 		}
