@@ -32,7 +32,7 @@ func NewRequester(prtc *p2pgrpc.GRPCProtocol, peerID peer.ID) (*BlockRequester, 
 
 // keepConnection dials highway to establish gRPC connection if it isn't available
 func (c *BlockRequester) keepConnection() {
-	for ; true; <-time.Tick(10 * time.Second) {
+	for ; true; <-time.Tick(2 * time.Second) {
 		if c.Ready() {
 			continue
 		}
