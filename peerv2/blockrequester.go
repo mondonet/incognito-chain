@@ -51,7 +51,7 @@ func (c *BlockRequester) keepConnection() {
 		if conn, err := c.prtc.Dial(
 			ctx,
 			c.highwayPID,
-			// grpc.WithInsecure(),
+			grpc.WithInsecure(),
 			grpc.WithBlock(),
 			grpc.WithKeepaliveParams(keepalive.ClientParameters{
 				Time:    2 * time.Minute,
