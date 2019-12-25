@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
+	"google.golang.org/grpc/keepalive"
 )
 
 // TODO(@0xbunyip): cache all requests to prevent querying the same height multiple times
@@ -50,8 +51,12 @@ func (c *BlockRequester) keepConnection() {
 		if conn, err := c.prtc.Dial(
 			ctx,
 			c.highwayPID,
-			grpc.WithInsecure(),
+			// grpc.WithInsecure(),
 			grpc.WithBlock(),
+			grpc.WithKeepaliveParams(keepalive.ClientParameters{
+				Time:    2 * time.Minute,
+				Timeout: 2 * time.Second,
+			}),
 		); err != nil {
 			Logger.Error("Could not dial to highway grpc server:", err, c.highwayPID)
 		} else {
