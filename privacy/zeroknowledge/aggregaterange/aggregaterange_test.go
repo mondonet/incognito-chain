@@ -96,10 +96,10 @@ func TestEncodeVectors(t *testing.T) {
 }
 
 func TestAggregatedRangeProveVerify(t *testing.T) {
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 100000; i++ {
 		//prepare witness for Aggregated range protocol
 		wit := new(AggregatedRangeWitness)
-		numValue := rand.Intn(maxOutputNumber)
+		numValue := 1
 		values := make([]uint64, numValue)
 		rands := make([]*privacy.Scalar, numValue)
 
@@ -118,33 +118,34 @@ func TestAggregatedRangeProveVerify(t *testing.T) {
 		assert.Equal(t, true, res)
 		assert.Equal(t, nil, err)
 
-		// verify the proof faster
-		res, err = proof.VerifyFaster()
-		assert.Equal(t, true, res)
-		assert.Equal(t, nil, err)
-
-		// validate sanity for proof
-		isValidSanity := proof.ValidateSanity()
-		assert.Equal(t, true, isValidSanity)
-
-		// convert proof to bytes array
-		bytes := proof.Bytes()
-		expectProofSize := EstimateMultiRangeProofSize(numValue)
-		assert.Equal(t, int(expectProofSize), len(bytes))
-
-		// new aggregatedRangeProof from bytes array
-		proof2 := new(AggregatedRangeProof)
-		proof2.SetBytes(bytes)
-
-		// verify the proof
-		res, err = proof2.Verify()
-		assert.Equal(t, true, res)
-		assert.Equal(t, nil, err)
-
-		// verify the proof faster
-		res, err = proof2.VerifyFaster()
-		assert.Equal(t, true, res)
-		assert.Equal(t, nil, err)
+		//// verify the proof faster
+		//res, err = proof.VerifyFaster()
+		//assert.Equal(t, true, res)
+		//assert.Equal(t, nil, err)
+		//
+		//// validate sanity for proof
+		//isValidSanity := proof.ValidateSanity()
+		//assert.Equal(t, true, isValidSanity)
+		//
+		//// convert proof to bytes array
+		//bytes := proof.Bytes()
+		//expectProofSize := EstimateMultiRangeProofSize(numValue)
+		//fmt.Printf("expectProofSize: %v\n", expectProofSize)
+		//assert.Equal(t, int(expectProofSize), len(bytes))
+		//
+		//// new aggregatedRangeProof from bytes array
+		//proof2 := new(AggregatedRangeProof)
+		//proof2.SetBytes(bytes)
+		//
+		//// verify the proof
+		//res, err = proof2.Verify()
+		//assert.Equal(t, true, res)
+		//assert.Equal(t, nil, err)
+		//
+		//// verify the proof faster
+		//res, err = proof2.VerifyFaster()
+		//assert.Equal(t, true, res)
+		//assert.Equal(t, nil, err)
 	}
 
 }

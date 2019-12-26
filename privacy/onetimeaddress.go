@@ -49,9 +49,5 @@ func IsPairOneTimeAddr(oneTimeAddr *Point, cmRand *Point, viewKey ViewingKey, in
 	}
 
 	isPair := IsPointEqual(pubSpendKeyFromOneTimeAddr, pubSpendKey)
-	if isPair {
-		return true, randOTA, nil
-	}
-
-	return false, randOTA, err
+	return isPair, randOTA, nil
 }

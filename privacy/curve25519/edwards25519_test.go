@@ -150,7 +150,7 @@ func TestMultiScalarMultKey(t *testing.T) {
 }
 
 func BenchmarkMultiScalarMultKey(b *testing.B) {
-	len := 64
+	len := 64*32
 	scalarLs := make([]*Key, len)
 	pointLs := make([]*Key, len)
 
