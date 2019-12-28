@@ -107,7 +107,7 @@ func (e *BLSBFT) processProposeMsg(proposeMsg *BFTPropose) error {
 			return err
 		}
 		if instance.isFinalizable() {
-			err := instance.FinalizeBlock()
+			err := instance.finalizeBlock()
 			if err != nil {
 				return err
 			}
@@ -148,11 +148,13 @@ func (e *BLSBFT) processVoteMsg(vote *BFTVote) error {
 		if err != nil {
 			return err
 		}
+		e.lockOnGoingBlocks.RLock()
 	}
 	if instance == nil {
 		instance = e.onGoingBlocks[vote.BlockHash]
 	}
 
+	e.lockOnGoingBlocks.RUnlock()
 	if err := instance.addVote(vote); err != nil {
 		return err
 	}
@@ -166,7 +168,7 @@ func (e *BLSBFT) processVoteMsg(vote *BFTVote) error {
 
 	}()
 	if instance.isFinalizable() {
-		err := instance.FinalizeBlock()
+		err := instance.finalizeBlock()
 		if err != nil {
 			return err
 		}

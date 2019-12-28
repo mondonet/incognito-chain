@@ -90,7 +90,7 @@ func (blockCI *blockConsensusInstance) addBlock(block common.BlockInterface) err
 	return nil
 }
 
-func (blockCI *blockConsensusInstance) FinalizeBlock() error {
+func (blockCI *blockConsensusInstance) finalizeBlock() error {
 	aggSig, brigSigs, validatorIdx, err := combineVotes(blockCI.Votes, blockCI.Committee.StringList)
 	if err != nil {
 		return err
