@@ -25,7 +25,6 @@ type BLSBFT struct {
 	StopCh       chan struct{}
 	Logger       common.Logger
 
-	// currentTimeslotOfViews map[string]uint64
 	bestProposeBlockOfView map[string]string
 	onGoingBlocks          map[string]*blockConsensusInstance
 	lockOnGoingBlocks      sync.RWMutex
@@ -70,12 +69,10 @@ func (e *BLSBFT) Start() error {
 	}
 	e.isStarted = true
 	e.StopCh = make(chan struct{})
-	// e.currentTimeslotOfViews = make(map[string]uint64)
 	e.bestProposeBlockOfView = make(map[string]string)
 	e.onGoingBlocks = make(map[string]*blockConsensusInstance)
 
 	//init view maps
-	// ticker := time.Tick(1 * time.Second)
 	e.Logger.Info("start bls-bftv2 consensus for chain", e.ChainKey)
 	go func() {
 		e.viewWatcher(e.Chain.GetBestView())
@@ -115,7 +112,9 @@ func (e *BLSBFT) chainWatcher() {
 		update := <-updateCh
 		switch update.Action {
 		case common.VIEWADDED:
-			e.viewWatcher(update.View)
+			go func() {
+				e.viewWatcher(update.View)
+			}()
 		case common.CHAINFINALIZED:
 			e.lockOnGoingBlocks.Lock()
 			defer e.lockOnGoingBlocks.Unlock()
@@ -133,7 +132,6 @@ func (e *BLSBFT) chainWatcher() {
 
 //viewWatcher - check whether view is best and in timeslot to propose block
 func (e *BLSBFT) viewWatcher(view consensus.ChainViewInterface) {
-	e.lockOnGoingBlocks.RLock()
 	viewHash := view.Hash().String()
 	var timeoutCh chan struct{}
 	timeoutCh = make(chan struct{})

@@ -101,9 +101,9 @@ func (e *BLSBFT) processProposeMsg(proposeMsg *BFTPropose) error {
 	case BlockIsMissingFromBlockConsensusInstanceError:
 		e.lockOnGoingBlocks.RLock()
 		instance := e.onGoingBlocks[blockHash]
+		e.lockOnGoingBlocks.RUnlock()
 		err := instance.addBlock(block)
 		if err != nil {
-			e.lockOnGoingBlocks.RUnlock()
 			return err
 		}
 		if instance.isFinalizable() {
@@ -112,7 +112,6 @@ func (e *BLSBFT) processProposeMsg(proposeMsg *BFTPropose) error {
 				return err
 			}
 		}
-		e.lockOnGoingBlocks.RUnlock()
 	case nil:
 		instance, err := e.createBlockConsensusInstance(view, blockHash)
 		if err != nil {
