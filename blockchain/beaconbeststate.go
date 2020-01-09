@@ -177,8 +177,12 @@ func (beaconBestState *BeaconBestState) GetBestShardHeight() map[byte]uint64 {
 }
 
 func (beaconBestState *BeaconBestState) GetBestHeightOfShard(shardID byte) uint64 {
+	Logger.log.Infof("beaconBestState.RLock START")
 	beaconBestState.lock.RLock()
+	Logger.log.Infof("beaconBestState.RLock DONE")
+	defer Logger.log.Infof("beaconBestState.RUnlock START")
 	defer beaconBestState.lock.RUnlock()
+	defer Logger.log.Infof("beaconBestState.RUnlock DONE")
 	return beaconBestState.BestShardHeight[shardID]
 }
 
