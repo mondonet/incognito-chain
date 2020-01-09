@@ -127,15 +127,20 @@ func GetReportChainState(
 	report *ReportedChainState,
 	shards map[byte]struct{},
 ) ReportedChainState {
+	Logger.log.Info("[GetReportChainState] Start")
 	beaconBestState := GetBeaconBestState()
+	Logger.log.Info("[GetReportChainState] Done GetBeaconBestState")
 	shardBestState := new(ShardBestState)
 	// Get common report, for all of node, committee, fullnode,...
 	beaconBestState.lock.RLock()
 	defer beaconBestState.lock.RUnlock()
+	Logger.log.Info("[GetReportChainState] Done beaconBestState.RLock")
 	for _, peerState := range peersState {
 		for shardID := range shards {
 			shardBestState = GetBestStateShard(shardID)
+			Logger.log.Info("[GetReportChainState] Done GetBestStateShard")
 			shardBestState.lock.RLock()
+			Logger.log.Info("[GetReportChainState] Done GetBestStateShard.RLock")
 			if shardState, ok := peerState.Shard[shardID]; ok {
 				if shardState.Height >= beaconBestState.GetBestHeightOfShard(shardID) && shardState.Height > shardBestState.ShardHeight {
 					// report.ClosestShardsState[shardID].Height == shardBestState.ShardHeight
@@ -150,6 +155,7 @@ func GetReportChainState(
 				}
 			}
 			shardBestState.lock.RUnlock()
+			Logger.log.Info("[GetReportChainState] Done GetBestStateShard.RUnlock")
 		}
 		if peerState.Beacon.Height > beaconBestState.BeaconHeight {
 			if report.ClosestBeaconState.Height == beaconBestState.BeaconHeight {
@@ -161,6 +167,7 @@ func GetReportChainState(
 			}
 		}
 	}
+	Logger.log.Info("[GetReportChainState] Finish")
 	return *report
 }
 
@@ -176,6 +183,7 @@ func GetMissingBlockHashesFromPeersState(
 		if peerState.Beacon.Height == beaconBestStateGetter().BeaconHeight && !peerState.Beacon.BlockHash.IsEqual(&beaconBestStateGetter().BestBlockHash) {
 			res[BEACON_ID] = append(res[BEACON_ID], peerState.Beacon.BlockHash)
 		}
+		Logger.log.Info("[GetMissingBlockHashesFromPeersState] Done beaconBestStateGetter")
 		for shardID := range shards {
 			if shardState, ok := peerState.Shard[shardID]; ok {
 				if shardState.Height == shardBestStateGetter(shardID).ShardHeight && !shardState.BlockHash.IsEqual(&shardBestStateGetter(shardID).BestBlockHash) {
@@ -183,6 +191,7 @@ func GetMissingBlockHashesFromPeersState(
 				}
 			}
 		}
+		Logger.log.Info("[GetMissingBlockHashesFromPeersState] Done shardBestStateGetter")
 	}
 	return res
 }
