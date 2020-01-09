@@ -228,8 +228,12 @@ func (beaconBestState *BeaconBestState) GetCurrentShard() byte {
 }
 
 func (beaconBestState *BeaconBestState) SetMaxShardCommitteeSize(maxShardCommitteeSize int) bool {
+	Logger.log.Info("beaconBestState.Lock START")
 	beaconBestState.lock.Lock()
+	Logger.log.Info("beaconBestState.Lock DONE")
+	defer Logger.log.Info("beaconBestState.Unlock START")
 	defer beaconBestState.lock.Unlock()
+	defer Logger.log.Info("beaconBestState.Unlock DONE")
 	// check input params, below MinCommitteeSize failed to acheive consensus
 	if maxShardCommitteeSize < MinCommitteeSize {
 		return false
@@ -243,8 +247,12 @@ func (beaconBestState *BeaconBestState) SetMaxShardCommitteeSize(maxShardCommitt
 }
 
 func (beaconBestState *BeaconBestState) SetMinShardCommitteeSize(minShardCommitteeSize int) bool {
+	Logger.log.Info("beaconBestState.Lock START")
 	beaconBestState.lock.Lock()
+	Logger.log.Info("beaconBestState.Lock DONE")
+	defer Logger.log.Info("beaconBestState.Unlock START")
 	defer beaconBestState.lock.Unlock()
+	defer Logger.log.Info("beaconBestState.Unlock DONE")
 	// check input params, below MinCommitteeSize failed to acheive consensus
 	if minShardCommitteeSize < MinCommitteeSize {
 		return false
@@ -258,8 +266,12 @@ func (beaconBestState *BeaconBestState) SetMinShardCommitteeSize(minShardCommitt
 }
 
 func (beaconBestState *BeaconBestState) SetMaxBeaconCommitteeSize(maxBeaconCommitteeSize int) bool {
+	Logger.log.Info("beaconBestState.Lock START")
 	beaconBestState.lock.Lock()
+	Logger.log.Info("beaconBestState.Lock DONE")
+	defer Logger.log.Info("beaconBestState.Unlock START")
 	defer beaconBestState.lock.Unlock()
+	defer Logger.log.Info("beaconBestState.Unlock DONE")
 	// check input params, below MinCommitteeSize failed to acheive consensus
 	if maxBeaconCommitteeSize < MinCommitteeSize {
 		return false
@@ -596,8 +608,12 @@ func (beaconBestState *BeaconBestState) UpdateLastCrossShardState(shardStates ma
 }
 
 func (beaconBestState *BeaconBestState) GetAutoStakingList() map[string]bool {
+	Logger.log.Info("beaconBestState.Lock START")
 	beaconBestState.lock.RLock()
+	Logger.log.Info("beaconBestState.Lock DONE")
+	defer Logger.log.Info("beaconBestState.Unlock START")
 	defer beaconBestState.lock.RUnlock()
+	defer Logger.log.Info("beaconBestState.Unlock END")
 	m := make(map[string]bool)
 	for k, v := range beaconBestState.AutoStaking {
 		m[k] = v

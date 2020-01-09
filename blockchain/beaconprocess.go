@@ -82,7 +82,8 @@ func (blockchain *BlockChain) InsertBeaconBlock(beaconBlock *BeaconBlock, isVali
 		if err := blockchain.revertBeaconState(); err != nil {
 			panic(err)
 		}
-		blockchain.BestState.Beacon.lock.Unlock()
+		// TODO @Bahamoot check here pls
+		// blockchain.BestState.Beacon.lock.Unlock()
 		Logger.log.Infof("REVERTED BEACON, Revert Current Beacon Block Height %+v, Hash %+v", currentBeaconHeight, currentBeaconHash)
 	}
 
@@ -720,8 +721,12 @@ func (beaconBestState *BeaconBestState) verifyPostProcessingBeaconBlock(beaconBl
 	Update Beststate with new Block
 */
 func (beaconBestState *BeaconBestState) updateBeaconBestState(beaconBlock *BeaconBlock, chainParamEpoch uint64, chainParamAssignOffset int, randomTime uint64) error {
+	Logger.log.Info("beaconBestState.Lock START")
 	beaconBestState.lock.Lock()
+	Logger.log.Info("beaconBestState.Lock DONE")
+	defer Logger.log.Info("beaconBestState.Unlock START")
 	defer beaconBestState.lock.Unlock()
+	defer Logger.log.Info("beaconBestState.Unlock END")
 	Logger.log.Debugf("Start processing new block at height %d, with hash %+v", beaconBlock.Header.Height, *beaconBlock.Hash())
 	newBeaconCandidate := []incognitokey.CommitteePublicKey{}
 	newShardCandidate := []incognitokey.CommitteePublicKey{}
@@ -841,8 +846,12 @@ func (beaconBestState *BeaconBestState) initBeaconBestState(genesisBeaconBlock *
 		newShardCandidate  = []incognitokey.CommitteePublicKey{}
 	)
 	Logger.log.Info("Process Update Beacon Best State With Beacon Genesis Block")
+	Logger.log.Info("beaconBestState.Lock START")
 	beaconBestState.lock.Lock()
+	Logger.log.Info("beaconBestState.Lock END")
+	defer Logger.log.Info("beaconBestState.Unlock START")
 	defer beaconBestState.lock.Unlock()
+	defer Logger.log.Info("beaconBestState.Unlock END")
 	beaconBestState.PreviousBestBlockHash = beaconBestState.BestBlockHash
 	beaconBestState.BestBlockHash = *genesisBeaconBlock.Hash()
 	beaconBestState.BestBlock = *genesisBeaconBlock
@@ -1159,7 +1168,9 @@ func (blockchain *BlockChain) processStoreBeaconBlock(
 	}
 	//================================Store cross shard state ==================================
 	if beaconBlock.Body.ShardState != nil {
+		Logger.log.Info("beaconBestState.Lock START")
 		GetBeaconBestState().lock.Lock()
+		Logger.log.Info("beaconBestState.Lock DONE")
 		lastCrossShardState := GetBeaconBestState().LastCrossShardState
 		for fromShard, shardBlocks := range beaconBlock.Body.ShardState {
 			for _, shardBlock := range shardBlocks {
@@ -1174,14 +1185,18 @@ func (blockchain *BlockChain) processStoreBeaconBlock(
 					waitHeight := shardBlock.Height
 					err := blockchain.config.DataBase.StoreCrossShardNextHeight(fromShard, toShard, lastHeight, waitHeight)
 					if err != nil {
+						Logger.log.Info("beaconBestState.Unlock1 START")
 						GetBeaconBestState().lock.Unlock()
+						Logger.log.Info("beaconBestState.Unlock1 END")
 						return NewBlockChainError(StoreCrossShardNextHeightError, err)
 					}
 					//beacon process shard_to_beacon in order so cross shard next height also will be saved in order
 					//dont care overwrite this value
 					err = blockchain.config.DataBase.StoreCrossShardNextHeight(fromShard, toShard, waitHeight, 0)
 					if err != nil {
+						Logger.log.Info("beaconBestState.Unlock2 START")
 						GetBeaconBestState().lock.Unlock()
+						Logger.log.Info("beaconBestState.Unlock2 END")
 						return NewBlockChainError(StoreCrossShardNextHeightError, err)
 					}
 					if lastCrossShardState[fromShard] == nil {
@@ -1192,7 +1207,9 @@ func (blockchain *BlockChain) processStoreBeaconBlock(
 			}
 			blockchain.config.CrossShardPool[fromShard].UpdatePool()
 		}
+		Logger.log.Info("beaconBestState.Unlock3 START")
 		GetBeaconBestState().lock.Unlock()
+		Logger.log.Info("beaconBestState.Unlock3 END")
 	}
 	//=============================END Store cross shard state ==================================
 	if err := blockchain.config.DataBase.StoreBeaconBlockIndex(blockHash, beaconBlock.Header.Height); err != nil {
