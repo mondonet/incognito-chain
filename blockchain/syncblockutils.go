@@ -2,7 +2,6 @@ package blockchain
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/incognitochain/incognito-chain/common"
 	"github.com/incognitochain/incognito-chain/database"
@@ -127,21 +126,13 @@ func GetReportChainState(
 	peersState map[string]*PeerState,
 	report *ReportedChainState,
 	shards map[byte]struct{},
+	beaconBestState *BeaconBestState,
+	ShBestState map[byte]ShardBestState,
 ) ReportedChainState {
-	Logger.log.Info("[GetReportChainState] Start")
-	beaconBestState := GetBeaconBestState()
-	Logger.log.Info("[GetReportChainState] Done GetBeaconBestState")
-	shardBestState := new(ShardBestState)
 	// Get common report, for all of node, committee, fullnode,...
-	beaconBestState.lock.RLock()
-	defer beaconBestState.lock.RUnlock()
-	Logger.log.Infof("[GetReportChainState] Done beaconBestState.RLock %v", time.Now())
 	for _, peerState := range peersState {
 		for shardID := range shards {
-			shardBestState = GetBestStateShard(shardID)
-			Logger.log.Info("[GetReportChainState] Done GetBestStateShard")
-			shardBestState.lock.RLock()
-			Logger.log.Infof("[GetReportChainState] Done GetBestStateShard.RLock %v", time.Now())
+			shardBestState := ShBestState[shardID]
 			if shardState, ok := peerState.Shard[shardID]; ok {
 				if shardState.Height >= beaconBestState.GetBestHeightOfShard(shardID) && shardState.Height > shardBestState.ShardHeight {
 					// report.ClosestShardsState[shardID].Height == shardBestState.ShardHeight
@@ -155,8 +146,6 @@ func GetReportChainState(
 					}
 				}
 			}
-			shardBestState.lock.RUnlock()
-			Logger.log.Info("[GetReportChainState] Done GetBestStateShard.RUnlock")
 		}
 		if peerState.Beacon.Height > beaconBestState.BeaconHeight {
 			if report.ClosestBeaconState.Height == beaconBestState.BeaconHeight {
