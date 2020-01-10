@@ -350,6 +350,8 @@ func (synker *Synker) UpdateState() {
 		synker.States.PeersState,
 		&RCS,
 		synker.Status.Shards,
+		&beaconStateClone,
+		shardsStateClone,
 	)
 	Logger.log.Info("[updatestate] Done GetReportChainState")
 
