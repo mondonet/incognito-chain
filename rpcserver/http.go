@@ -400,6 +400,13 @@ func (httpServer *HttpServer) checkBlackListClientRequest(r *http.Request, metho
 }
 
 func (httpServer *HttpServer) addBlackListClientRequest(r *http.Request, method string) {
+
+	// pink list method
+	switch method {
+	case getBeaconSwapProof, getLatestBeaconSwapProof, getLatestBridgeSwapProof, getBurnProof:
+		return
+	}
+
 	remoteAddress := getIP(r)
 	remoteAddressKey := append([]byte("rpc-blacklist-"), []byte(remoteAddress)...)
 	remoteAddressKey = append(remoteAddressKey, []byte(method)...)
