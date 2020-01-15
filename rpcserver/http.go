@@ -386,7 +386,7 @@ func (httpServer *HttpServer) checkBlackListClientRequest(r *http.Request, metho
 
 	requestCountInByte, err1 := httpServer.config.MemCache.Get(remoteAddressKey)
 	if err1 != nil {
-		Logger.log.Infof("Can not get limit request per day for %s err:%+v", remoteAddress)
+		Logger.log.Infof("Can not get limit request per day for %s err:%+v", remoteAddress, err1)
 	}
 	if requestCountInByte != nil {
 		requestCount := common.BytesToInt(requestCountInByte)
@@ -408,7 +408,7 @@ func (httpServer *HttpServer) addBlackListClientRequest(r *http.Request, method 
 
 	requestCountInByte, err1 := httpServer.config.MemCache.Get(remoteAddressKey)
 	if err1 != nil {
-		Logger.log.Infof("Can not get limit request per day for %s err:%+v", remoteAddress)
+		Logger.log.Infof("Can not get limit request per day for %s err:%+v", remoteAddress, err1)
 	}
 	if requestCountInByte != nil {
 		requestCount := common.BytesToInt(requestCountInByte)
