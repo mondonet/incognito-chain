@@ -313,7 +313,7 @@ func (httpServer *HttpServer) ProcessRpcRequest(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	if jsonErr != nil {
+	if jsonErr != nil && jsonErr.(*rpcservice.RPCError) != nil {
 		httpServer.addBlackListClientRequest(r, request.Method)
 	}
 
