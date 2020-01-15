@@ -404,6 +404,8 @@ func (httpServer *HttpServer) addBlackListClientRequest(r *http.Request, method 
 	remoteAddressKey := append([]byte("rpc-blacklist-"), []byte(remoteAddress)...)
 	remoteAddressKey = append(remoteAddressKey, []byte(method)...)
 
+	Logger.log.Info("Can update limit request per day for %s on method %s", remoteAddress, method)
+
 	requestCountInByte, err1 := httpServer.config.MemCache.Get(remoteAddressKey)
 	if err1 != nil {
 		Logger.log.Info("Can not get limit request per day for %s err:%+v", remoteAddress)
