@@ -386,7 +386,7 @@ func (httpServer *HttpServer) checkBlackListClientRequest(r *http.Request, metho
 
 	requestCountInByte, err1 := httpServer.config.MemCache.Get(remoteAddressKey)
 	if err1 != nil {
-		Logger.log.Info("Can not get limit request per day for %s err:%+v", remoteAddress)
+		Logger.log.Infof("Can not get limit request per day for %s err:%+v", remoteAddress)
 	}
 	if requestCountInByte != nil {
 		requestCount := common.BytesToInt(requestCountInByte)
@@ -404,11 +404,11 @@ func (httpServer *HttpServer) addBlackListClientRequest(r *http.Request, method 
 	remoteAddressKey := append([]byte("rpc-blacklist-"), []byte(remoteAddress)...)
 	remoteAddressKey = append(remoteAddressKey, []byte(method)...)
 
-	Logger.log.Info("Can update limit request per day for %s on method %s", remoteAddress, method)
+	Logger.log.Infof("Can update limit request per day for %s on method %s", remoteAddress, method)
 
 	requestCountInByte, err1 := httpServer.config.MemCache.Get(remoteAddressKey)
 	if err1 != nil {
-		Logger.log.Info("Can not get limit request per day for %s err:%+v", remoteAddress)
+		Logger.log.Infof("Can not get limit request per day for %s err:%+v", remoteAddress)
 	}
 	if requestCountInByte != nil {
 		requestCount := common.BytesToInt(requestCountInByte)
@@ -420,7 +420,7 @@ func (httpServer *HttpServer) addBlackListClientRequest(r *http.Request, method 
 		requestCountInByte = common.IntToBytes(requestCount)
 		err := httpServer.config.MemCache.PutExpired(remoteAddressKey, requestCountInByte, 1*60*60*1000) // cache in 1 hour
 		if err != nil {
-			Logger.log.Error("Can not update limit request per day for %s err:%+v", remoteAddress, err)
+			Logger.log.Errorf("Can not update limit request per day for %s err:%+v", remoteAddress, err)
 		}
 	}
 }
