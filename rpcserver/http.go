@@ -403,7 +403,7 @@ func (httpServer *HttpServer) addBlackListClientRequest(r *http.Request, method 
 
 	// pink list method
 	switch method {
-	case getBeaconSwapProof, getLatestBeaconSwapProof, getLatestBridgeSwapProof, getBurnProof:
+	case getBeaconSwapProof, getLatestBeaconSwapProof, getLatestBridgeSwapProof, getBurnProof, getTransactionByHash, getBridgeReqWithStatus:
 		return
 	}
 
